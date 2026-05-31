@@ -21,6 +21,14 @@ body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-he
 body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;}
 .wrap{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:40px 24px 80px;}
 
+/* SYNC STATUS BAR */
+.sync-bar{display:flex;align-items:center;gap:8px;font-size:11px;font-family:'DM Mono',monospace;margin-bottom:16px;padding:8px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;width:fit-content;}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);transition:background 0.3s;}
+.sync-dot.ok{background:var(--green);animation:pulse 3s infinite;}
+.sync-dot.saving{background:var(--amber);animation:pulse 0.6s infinite;}
+.sync-dot.err{background:var(--red);}
+.sync-text{color:var(--text3);}
+
 /* PIN */
 #pinOverlay{display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.8);backdrop-filter:blur(8px);align-items:center;justify-content:center;}
 #pinOverlay.show{display:flex;}
@@ -56,12 +64,12 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .last-update{font-size:11px;color:var(--text3);margin-top:8px;font-family:'DM Mono',monospace;}
 
 /* ACCOUNT SWITCHER */
-.acct-switcher{display:flex;gap:6px;margin-bottom:28px;padding:4px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;width:fit-content;}
+.acct-switcher{display:flex;gap:6px;padding:4px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;width:fit-content;margin-bottom:8px;}
 .acct-btn{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:9px 22px;border-radius:8px;border:none;cursor:pointer;background:transparent;color:var(--text3);transition:all 0.2s;}
 .acct-btn:hover{color:var(--text2);}
 .acct-btn.active-hr{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,77,109,0.25);}
 .acct-btn.active-mr{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(77,159,255,0.25);}
-.acct-name-edit{display:none;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;align-items:center;gap:6px;margin-bottom:16px;}
+.acct-name-edit{display:none;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;align-items:center;gap:6px;margin-bottom:16px;flex-wrap:wrap;}
 .acct-name-edit.show{display:flex;}
 .acct-name-input{background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:4px 10px;font-family:'Syne',sans-serif;font-size:12px;color:var(--text);outline:none;width:160px;}
 
@@ -75,11 +83,18 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .edit-hint{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;}
 .lock-btn{display:inline-flex;align-items:center;gap:6px;font-family:'Syne',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:6px 14px;border-radius:6px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text3);transition:all 0.2s;margin-left:auto;}
 .lock-btn:hover{color:var(--red);border-color:rgba(255,77,109,0.3);}
-.viewer-hint{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:20px;cursor:pointer;width:fit-content;}
+.viewer-hint{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:16px;cursor:pointer;width:fit-content;}
 .viewer-hint:hover{color:var(--text2);}
 .viewer-hint.hidden{display:none;}
 
-/* SUMMARY CARDS */
+/* SETUP BANNER */
+.setup-banner{background:var(--amber-dim);border:1px solid rgba(245,166,35,0.3);border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:12px;font-family:'DM Mono',monospace;color:var(--amber);display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.setup-banner.hidden{display:none;}
+.setup-input{background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:6px 12px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text);outline:none;width:340px;max-width:100%;}
+.setup-save-btn{padding:6px 14px;background:var(--amber-dim);border:1px solid rgba(245,166,35,0.4);border-radius:6px;color:var(--amber);font-family:'Syne',sans-serif;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:0.06em;}
+.setup-save-btn:hover{background:rgba(245,166,35,0.2);}
+
+/* CARDS */
 .summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin-bottom:28px;}
 .scard{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px 18px 14px;position:relative;overflow:hidden;transition:border-color 0.2s;}
 .scard::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent-color,var(--border));border-radius:12px 12px 0 0;}
@@ -140,7 +155,7 @@ tbody tr.total-row td{color:var(--text);font-weight:600;}
 .mcard-pct.pos{color:rgba(0,209,122,0.6);}
 .mcard-pct.neg{color:rgba(255,77,109,0.6);}
 
-/* RECAP SECTION */
+/* RECAP */
 .recap-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:8px;}
 .recap-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px 20px;}
 .recap-label{font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;}
@@ -154,21 +169,20 @@ tbody tr.total-row td{color:var(--text);font-weight:600;}
 .recap-auto-badge{display:inline-block;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);border:1px solid rgba(0,209,122,0.2);padding:1px 6px;border-radius:4px;margin-left:6px;vertical-align:middle;}
 
 /* FOOTER */
-.footer{margin-top:48px;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;border-top:1px solid var(--border);padding-top:20px;}
+.footer{margin-top:48px;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;border-top:1px solid var(--border);padding-top:20px;flex-wrap:wrap;gap:8px;}
 
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .scard,.mcard,.recap-card{animation:fadeIn 0.35s ease forwards;}
-.acct-section{animation:fadeIn 0.25s ease forwards;}
 </style>
 </head>
 <body>
 
-<!-- PIN MODAL -->
+<!-- PIN -->
 <div id="pinOverlay">
   <div class="pin-box" id="pinBox">
     <div class="pin-title">Admin Access</div>
     <div class="pin-sub">Masukkan PIN untuk edit</div>
-    <div class="pin-dots" id="pinDots">
+    <div class="pin-dots">
       <div class="pin-dot" id="d0"></div><div class="pin-dot" id="d1"></div>
       <div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div>
     </div>
@@ -196,6 +210,19 @@ tbody tr.total-row td{color:var(--text);font-weight:600;}
     </div>
   </div>
 
+  <!-- SYNC STATUS -->
+  <div class="sync-bar">
+    <div class="sync-dot" id="syncDot"></div>
+    <span class="sync-text" id="syncText">Tiada sambungan Google Sheets</span>
+  </div>
+
+  <!-- SETUP BANNER (shown until URL configured) -->
+  <div class="setup-banner" id="setupBanner">
+    ⚙️ <span>Letak URL Google Apps Script kau:</span>
+    <input class="setup-input" id="scriptUrlInput" placeholder="https://script.google.com/macros/s/XXXXX/exec">
+    <button class="setup-save-btn" onclick="saveScriptUrl()">Simpan URL</button>
+  </div>
+
   <!-- VIEWER HINT -->
   <div class="viewer-hint" id="viewerHint" onclick="openPin()">🔒 <span>Admin login</span></div>
 
@@ -214,53 +241,161 @@ tbody tr.total-row td{color:var(--text);font-weight:600;}
       <button class="acct-btn" id="btn-mr" onclick="switchAccount('mr')">🔵 Medium Risk</button>
     </div>
     <div class="acct-name-edit" id="nameEditBar">
-      <span style="color:var(--text3)">Rename:</span>
+      <span>Rename:</span>
       <input class="acct-name-input" id="nameHR" placeholder="High Risk" oninput="renameAccount('hr',this.value)">
       <input class="acct-name-input" id="nameMR" placeholder="Medium Risk" oninput="renameAccount('mr',this.value)">
     </div>
   </div>
 
-  <!-- ACCOUNT SECTIONS -->
-  <div id="section-hr" class="acct-section">
-    <!-- SUMMARY CARDS HR -->
-    <div class="summary-grid" id="cards-hr"></div>
-    <!-- MONTHLY OVERVIEW HR -->
-    <div class="section-head">Monthly Return Overview</div>
-    <div class="monthly-grid" id="monthGrid-hr"></div>
-    <!-- MONTH TABS HR -->
-    <div class="section-head" style="margin-top:8px;">Profit by Date</div>
-    <div class="mtabs-nav" id="mtabs-hr"></div>
-    <div id="mtabsContent-hr"></div>
-    <!-- RECAP HR -->
-    <div class="section-head" style="margin-top:32px;">Recap</div>
-    <div class="recap-grid" id="recap-hr"></div>
-  </div>
-
-  <div id="section-mr" class="acct-section" style="display:none;">
-    <!-- SUMMARY CARDS MR -->
-    <div class="summary-grid" id="cards-mr"></div>
-    <!-- MONTHLY OVERVIEW MR -->
-    <div class="section-head">Monthly Return Overview</div>
-    <div class="monthly-grid" id="monthGrid-mr"></div>
-    <!-- MONTH TABS MR -->
-    <div class="section-head" style="margin-top:8px;">Profit by Date</div>
-    <div class="mtabs-nav" id="mtabs-mr"></div>
-    <div id="mtabsContent-mr"></div>
-    <!-- RECAP MR -->
-    <div class="section-head" style="margin-top:32px;">Recap</div>
-    <div class="recap-grid" id="recap-mr"></div>
-  </div>
+  <!-- SECTIONS -->
+  <div id="section-hr"></div>
+  <div id="section-mr" style="display:none;"></div>
 
   <div class="footer">
     <span>AbelTheWild Robotic System © 2025</span>
-    <span>Data dikemaskini secara manual · Tiada MT5 access diperlukan</span>
+    <span>Google Sheets sync · Tiada MT5 access diperlukan</span>
   </div>
 </div>
 
 <script>
-// ─── PIN ──────────────────────────────────────────────────────────────────────
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
 const CORRECT_PIN='1109';
-let pinInput='',isAdmin=false,editMode=false;
+let SCRIPT_URL='https://script.google.com/macros/s/AKfycbx1kcjxg6Dj8MefKoIbhUzZk2gGW-OkiI5AKR0iYYkibmWh469XDfqvmy6CqkHXY1LTHA/exec';
+localStorage.setItem('abel_scriptUrl', SCRIPT_URL);
+let pinInput='',isAdmin=false,editMode=false,curAcct='hr';
+const ACCOUNTS=['hr','mr'];
+const acctNames={hr:'High Risk',mr:'Medium Risk'};
+const acctData={};
+
+// ─── MONTHS ───────────────────────────────────────────────────────────────────
+const MONTHS=[
+  {id:'jun',short:'Jun',days:30,start:'2025-06-01'},
+  {id:'jul',short:'Jul',days:31,start:'2025-07-01'},
+  {id:'aug',short:'Aug',days:31,start:'2025-08-01'},
+  {id:'sep',short:'Sep',days:30,start:'2025-09-01'},
+  {id:'oct',short:'Oct',days:31,start:'2025-10-01'},
+  {id:'nov',short:'Nov',days:30,start:'2025-11-01'},
+  {id:'dec',short:'Dec',days:31,start:'2025-12-01'},
+  {id:'jan',short:'Jan',days:31,start:'2026-01-01'},
+  {id:'feb',short:'Feb',days:28,start:'2026-02-01'},
+  {id:'mar',short:'Mar',days:31,start:'2026-03-01'},
+  {id:'apr',short:'Apr',days:30,start:'2026-04-01'},
+  {id:'may',short:'May',days:31,start:'2026-05-01'},
+];
+
+// ─── INIT DATA ────────────────────────────────────────────────────────────────
+function initData(){
+  ACCOUNTS.forEach(ac=>{
+    acctData[ac]={capital:'10000',months:{}};
+    MONTHS.forEach(m=>{
+      const rows=[];const d=new Date(m.start);
+      for(let i=0;i<m.days;i++){
+        const dd=String(d.getDate()).padStart(2,'0');
+        const mm=String(d.getMonth()+1).padStart(2,'0');
+        rows.push({date:`${dd}/${mm}/${d.getFullYear()}`,profit:'',dd:'',notes:''});
+        d.setDate(d.getDate()+1);
+      }
+      acctData[ac].months[m.id]={rows};
+    });
+  });
+}
+
+// ─── GOOGLE SHEETS SYNC ───────────────────────────────────────────────────────
+function setSyncStatus(state,msg){
+  const dot=document.getElementById('syncDot');
+  const txt=document.getElementById('syncText');
+  dot.className='sync-dot '+state;
+  txt.textContent=msg;
+}
+
+function saveScriptUrl(){
+  const url=document.getElementById('scriptUrlInput').value.trim();
+  if(!url){alert('URL kosong!');return;}
+  SCRIPT_URL=url;
+  localStorage.setItem('abel_scriptUrl',url);
+  document.getElementById('setupBanner').classList.add('hidden');
+  loadFromSheets();
+}
+
+async function loadFromSheets(){
+  if(!SCRIPT_URL){setSyncStatus('','Tiada URL — sila setup');return;}
+  setSyncStatus('saving','Memuatkan data...');
+  try{
+    const res=await fetch(SCRIPT_URL+'?action=get');
+    const json=await res.json();
+    if(!json.ok)throw new Error(json.error);
+    const d=json.data;
+    // Load account data
+    ACCOUNTS.forEach(ac=>{
+      const key='acct_'+ac;
+      if(d[key]){
+        try{
+          const parsed=JSON.parse(d[key]);
+          // merge rows — preserve date structure
+          if(parsed.capital)acctData[ac].capital=parsed.capital;
+          if(parsed.months){
+            MONTHS.forEach(m=>{
+              if(parsed.months[m.id]?.rows){
+                parsed.months[m.id].rows.forEach((r,i)=>{
+                  if(acctData[ac].months[m.id]?.rows[i])
+                    Object.assign(acctData[ac].months[m.id].rows[i],r);
+                });
+              }
+            });
+          }
+        }catch(e){}
+      }
+    });
+    // Load names
+    if(d['acct_names']){try{const n=JSON.parse(d['acct_names']);Object.assign(acctNames,n);}catch(e){}}
+    // Load last update
+    if(d['lastUpdate'])document.getElementById('lastUpdate').textContent=d['lastUpdate'];
+    rebuildAll();
+    setSyncStatus('ok','Sync berjaya · '+new Date().toLocaleTimeString('ms-MY'));
+  }catch(err){
+    setSyncStatus('err','Gagal load: '+err.message);
+    // fallback to localStorage
+    loadFromLocal();
+  }
+}
+
+async function saveToSheets(){
+  if(!SCRIPT_URL){saveToLocal();return;}
+  setSyncStatus('saving','Menyimpan...');
+  try{
+    const payload={};
+    ACCOUNTS.forEach(ac=>{payload['acct_'+ac]=JSON.stringify(acctData[ac]);});
+    payload['acct_names']=JSON.stringify(acctNames);
+    payload['lastUpdate']=document.getElementById('lastUpdate').textContent;
+    const res=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveAll',payload})});
+    const json=await res.json();
+    if(!json.ok)throw new Error(json.error);
+    saveToLocal(); // backup
+    setSyncStatus('ok','Tersimpan · '+new Date().toLocaleTimeString('ms-MY'));
+  }catch(err){
+    setSyncStatus('err','Gagal simpan: '+err.message);
+    saveToLocal();
+  }
+}
+
+function saveToLocal(){
+  ACCOUNTS.forEach(ac=>localStorage.setItem('abel_'+ac,JSON.stringify(acctData[ac])));
+  localStorage.setItem('abel_names',JSON.stringify(acctNames));
+  localStorage.setItem('abel_lastUpdate',document.getElementById('lastUpdate').textContent);
+}
+function loadFromLocal(){
+  ACCOUNTS.forEach(ac=>{
+    const d=localStorage.getItem('abel_'+ac);
+    if(d){try{const p=JSON.parse(d);if(p.capital)acctData[ac].capital=p.capital;if(p.months){MONTHS.forEach(m=>{if(p.months[m.id]?.rows)p.months[m.id].rows.forEach((r,i)=>{if(acctData[ac].months[m.id]?.rows[i])Object.assign(acctData[ac].months[m.id].rows[i],r);});});}}catch(e){}}
+  });
+  const n=localStorage.getItem('abel_names');
+  if(n){try{Object.assign(acctNames,JSON.parse(n));}catch(e){}}
+  const lu=localStorage.getItem('abel_lastUpdate');
+  if(lu)document.getElementById('lastUpdate').textContent=lu;
+  rebuildAll();
+}
+
+// ─── PIN ──────────────────────────────────────────────────────────────────────
 function openPin(){pinInput='';updateDots();document.getElementById('pinError').textContent='';document.getElementById('pinOverlay').classList.add('show');}
 function closePin(){document.getElementById('pinOverlay').classList.remove('show');pinInput='';updateDots();}
 function pressKey(k){if(pinInput.length>=4)return;pinInput+=k;updateDots();if(pinInput.length===4)setTimeout(checkPin,120);}
@@ -272,7 +407,7 @@ function checkPin(){
     document.getElementById('viewerHint').classList.add('hidden');
     document.getElementById('editBar').classList.add('visible');
     updateLastTime();
-  } else {
+  }else{
     for(let i=0;i<4;i++)document.getElementById('d'+i).classList.add('error');
     document.getElementById('pinBox').classList.add('shake');
     document.getElementById('pinError').textContent='PIN salah. Cuba lagi.';
@@ -307,221 +442,135 @@ function toggleEdit(){
   document.getElementById('nameEditBar').classList.toggle('show',editMode);
   document.querySelectorAll('.editable').forEach(el=>el.contentEditable=editMode?'true':'false');
   document.querySelectorAll('td[data-editable]').forEach(el=>el.contentEditable=editMode?'true':'false');
-  if(!editMode){recalcAll();saveAll();updateLastTime();}
+  if(!editMode){recalcAll();updateLastTime();saveToSheets();}
 }
-
-// ─── TIME ─────────────────────────────────────────────────────────────────────
 function updateLastTime(){
   const now=new Date();
   document.getElementById('lastUpdate').textContent='Kemaskini: '+now.toLocaleString('ms-MY',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 }
 updateLastTime();
 
-// ─── MONTHS ───────────────────────────────────────────────────────────────────
-const MONTHS=[
-  {id:'jun',label:'Jun 2025',short:'Jun',days:30,start:'2025-06-01'},
-  {id:'jul',label:'Jul 2025',short:'Jul',days:31,start:'2025-07-01'},
-  {id:'aug',label:'Aug 2025',short:'Aug',days:31,start:'2025-08-01'},
-  {id:'sep',label:'Sep 2025',short:'Sep',days:30,start:'2025-09-01'},
-  {id:'oct',label:'Oct 2025',short:'Oct',days:31,start:'2025-10-01'},
-  {id:'nov',label:'Nov 2025',short:'Nov',days:30,start:'2025-11-01'},
-  {id:'dec',label:'Dec 2025',short:'Dec',days:31,start:'2025-12-01'},
-  {id:'jan',label:'Jan 2026',short:'Jan',days:31,start:'2026-01-01'},
-  {id:'feb',label:'Feb 2026',short:'Feb',days:28,start:'2026-02-01'},
-  {id:'mar',label:'Mar 2026',short:'Mar',days:31,start:'2026-03-01'},
-  {id:'apr',label:'Apr 2026',short:'Apr',days:30,start:'2026-04-01'},
-  {id:'may',label:'May 2026',short:'May',days:31,start:'2026-05-01'},
-];
-
-// ─── DATA STORE ───────────────────────────────────────────────────────────────
-// accounts: hr = High Risk, mr = Medium Risk
-const ACCOUNTS=['hr','mr'];
-const acctNames={hr:'High Risk',mr:'Medium Risk'};
-const acctData={};
-
-function initData(){
-  ACCOUNTS.forEach(ac=>{
-    acctData[ac]={
-      capital:'10000',
-      months:{}
-    };
-    MONTHS.forEach(m=>{
-      const rows=[];
-      const d=new Date(m.start);
-      for(let i=0;i<m.days;i++){
-        const dd=String(d.getDate()).padStart(2,'0');
-        const mm=String(d.getMonth()+1).padStart(2,'0');
-        const yy=d.getFullYear();
-        rows.push({date:`${dd}/${mm}/${yy}`,profit:'',dd:'',notes:''});
-        d.setDate(d.getDate()+1);
-      }
-      acctData[ac].months[m.id]={rows};
-    });
-  });
-}
-
-// ─── STORAGE ──────────────────────────────────────────────────────────────────
-function saveAll(){
-  localStorage.setItem('abel2_data',JSON.stringify(acctData));
-  localStorage.setItem('abel2_names',JSON.stringify(acctNames));
-  localStorage.setItem('abel2_lastUpdate',document.getElementById('lastUpdate').textContent);
-}
-function loadAll(){
-  const d=localStorage.getItem('abel2_data');
-  if(d){const p=JSON.parse(d);ACCOUNTS.forEach(ac=>{if(p[ac])acctData[ac]=p[ac];});}
-  const n=localStorage.getItem('abel2_names');
-  if(n){const p=JSON.parse(n);ACCOUNTS.forEach(ac=>{if(p[ac])acctNames[ac]=p[ac];});}
-  const lu=localStorage.getItem('abel2_lastUpdate');
-  if(lu)document.getElementById('lastUpdate').textContent=lu;
-  // sync rename inputs
-  document.getElementById('nameHR').value=acctNames.hr;
-  document.getElementById('nameMR').value=acctNames.mr;
-}
-
 // ─── RENAME ───────────────────────────────────────────────────────────────────
 function renameAccount(ac,val){
-  acctNames[ac]=val||( ac==='hr'?'High Risk':'Medium Risk');
-  const btn=document.getElementById('btn-'+ac);
-  btn.textContent=(ac==='hr'?'⚡ ':'🔵 ')+acctNames[ac];
+  acctNames[ac]=val||(ac==='hr'?'High Risk':'Medium Risk');
+  document.getElementById('btn-'+ac).textContent=(ac==='hr'?'⚡ ':'🔵 ')+acctNames[ac];
 }
 
 // ─── CALCULATE ────────────────────────────────────────────────────────────────
-function parseNum(s){
-  if(!s||s==='—')return NaN;
-  return parseFloat(s.replace(/[^0-9.\-]/g,''));
-}
-
+function parseNum(s){if(!s||s==='—')return NaN;return parseFloat(s.replace(/[^0-9.\-]/g,''));}
 function calcAccount(ac){
   const capital=parseNum(acctData[ac].capital)||10000;
   let totalProfit=0,totalWins=0,totalTrades=0,maxDD=0;
   const monthTotals={};
-
   MONTHS.forEach(m=>{
     const rows=acctData[ac].months[m.id]?.rows||[];
-    let mProfit=0,mWins=0,mTrades=0,mMaxDD=0;
+    let mP=0,mW=0,mT=0,mDD=0;
     rows.forEach(r=>{
-      const p=parseNum(r.profit);
-      const d=parseNum(r.dd);
-      if(!isNaN(p)){
-        mProfit+=p;mTrades++;
-        if(p>0)mWins++;
-      }
-      if(!isNaN(d)&&d>mMaxDD)mMaxDD=d;
+      const p=parseNum(r.profit);const dd=parseNum(r.dd);
+      if(!isNaN(p)){mP+=p;mT++;if(p>0)mW++;}
+      if(!isNaN(dd)&&dd>mDD)mDD=dd;
     });
-    monthTotals[m.id]={profit:mProfit,pct:(mProfit/capital*100),wins:mWins,trades:mTrades,maxDD:mMaxDD};
-    totalProfit+=mProfit;
-    totalWins+=mWins;
-    totalTrades+=mTrades;
-    if(mMaxDD>maxDD)maxDD=mMaxDD;
+    monthTotals[m.id]={profit:mP,pct:(mP/capital*100),wins:mW,trades:mT,maxDD:mDD};
+    totalProfit+=mP;totalWins+=mW;totalTrades+=mT;
+    if(mDD>maxDD)maxDD=mDD;
   });
-
-  // current month = first month with any data, or latest
   const now=new Date();
-  const curMonthId=MONTHS.find(m=>{
-    const d=new Date(m.start);
-    return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth();
-  })?.id||MONTHS[0].id;
-
-  const monthReturn=monthTotals[curMonthId]?.profit||0;
-  const monthReturnPct=(monthReturn/capital*100);
-  const winRate=totalTrades>0?Math.round(totalWins/totalTrades*100):0;
-
-  return {capital,totalProfit,totalProfitPct:(totalProfit/capital*100),maxDD,winRate,totalTrades,monthReturn,monthReturnPct,monthTotals,curMonthId};
+  const curMid=MONTHS.find(m=>{const d=new Date(m.start);return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth()})?.id||MONTHS[0].id;
+  const mR=monthTotals[curMid]?.profit||0;
+  return{capital,totalProfit,totalProfitPct:(totalProfit/capital*100),maxDD,winRate:totalTrades>0?Math.round(totalWins/totalTrades*100):0,totalTrades,monthReturn:mR,monthReturnPct:(mR/capital*100),monthTotals,curMid};
 }
 
-// ─── BUILD SUMMARY CARDS ──────────────────────────────────────────────────────
+// ─── BUILD UI ─────────────────────────────────────────────────────────────────
+function buildSection(ac){
+  const sec=document.getElementById('section-'+ac);
+  sec.innerHTML=`
+    <div class="summary-grid" id="cards-${ac}"></div>
+    <div class="section-head">Monthly Return Overview</div>
+    <div class="monthly-grid" id="monthGrid-${ac}"></div>
+    <div class="section-head" style="margin-top:8px;">Profit by Date</div>
+    <div class="mtabs-nav" id="mtabs-${ac}"></div>
+    <div id="mtabsContent-${ac}"></div>
+    <div class="section-head" style="margin-top:32px;">Recap</div>
+    <div class="recap-grid" id="recap-${ac}"></div>`;
+  buildCards(ac);buildMonthGrid(ac);buildMonthTabs(ac);buildRecap(ac);
+}
+
 function buildCards(ac){
-  const c=document.getElementById('cards-'+ac);
-  c.innerHTML=`
-    <div class="scard blue">
-      <div class="scard-label">Total Capital</div>
+  document.getElementById('cards-'+ac).innerHTML=`
+    <div class="scard blue"><div class="scard-label">Total Capital</div>
       <div class="scard-val blue">$<span class="editable" data-acct="${ac}" data-field="capital" contenteditable="false">${acctData[ac].capital}</span></div>
-      <div class="scard-sub">Modal aktif</div>
-    </div>
-    <div class="scard green">
-      <div class="scard-label">Total Profit</div>
+      <div class="scard-sub">Modal aktif</div></div>
+    <div class="scard green"><div class="scard-label">Total Profit</div>
       <div class="scard-val green" id="totalProfit-${ac}">—</div>
-      <div class="scard-sub" id="totalProfitPct-${ac}">—</div>
-      <div class="scard-auto">auto</div>
-    </div>
-    <div class="scard red">
-      <div class="scard-label">Max Drawdown</div>
+      <div class="scard-sub" id="totalProfitPct-${ac}">—</div><div class="scard-auto">auto</div></div>
+    <div class="scard red"><div class="scard-label">Max Drawdown</div>
       <div class="scard-val red" id="maxDD-${ac}">—</div>
-      <div class="scard-sub">Terbesar rekod</div>
-      <div class="scard-auto">auto</div>
-    </div>
-    <div class="scard amber">
-      <div class="scard-label">Monthly Return</div>
+      <div class="scard-sub">Terbesar rekod</div><div class="scard-auto">auto</div></div>
+    <div class="scard amber"><div class="scard-label">Monthly Return</div>
       <div class="scard-val amber" id="monthReturn-${ac}">—</div>
-      <div class="scard-sub" id="monthReturnPct-${ac}">—</div>
-      <div class="scard-auto">auto · bulan semasa</div>
-    </div>
-    <div class="scard purple">
-      <div class="scard-label">Win Rate</div>
+      <div class="scard-sub" id="monthReturnPct-${ac}">—</div><div class="scard-auto">auto · bulan semasa</div></div>
+    <div class="scard purple"><div class="scard-label">Win Rate</div>
       <div class="scard-val purple" id="winRate-${ac}">—</div>
-      <div class="scard-sub" id="totalTrades-${ac}">—</div>
-      <div class="scard-auto">auto</div>
-    </div>`;
+      <div class="scard-sub" id="totalTrades-${ac}">—</div><div class="scard-auto">auto</div></div>`;
 }
 
-// ─── BUILD MONTHLY GRID ───────────────────────────────────────────────────────
 function buildMonthGrid(ac){
-  const grid=document.getElementById('monthGrid-'+ac);
-  grid.innerHTML='';
+  const g=document.getElementById('monthGrid-'+ac);g.innerHTML='';
   MONTHS.forEach((m,i)=>{
-    const card=document.createElement('div');
-    card.className='mcard'+(i===0?' active-month':'');
-    card.id='mc-'+ac+'-'+m.id;
-    card.onclick=()=>switchMonthTab(ac,m.id);
-    card.innerHTML=`<div class="mcard-month">${m.short}</div>
+    const c=document.createElement('div');
+    c.className='mcard'+(i===0?' active-month':'');
+    c.id='mc-'+ac+'-'+m.id;c.onclick=()=>switchMonthTab(ac,m.id);
+    c.innerHTML=`<div class="mcard-month">${m.short}</div>
       <div class="mcard-usd pos" id="mcusd-${ac}-${m.id}">—</div>
       <div class="mcard-pct pos" id="mcpct-${ac}-${m.id}">—</div>`;
-    grid.appendChild(card);
+    g.appendChild(c);
   });
 }
 
-// ─── BUILD MONTH TABS ─────────────────────────────────────────────────────────
 function buildMonthTabs(ac){
   const nav=document.getElementById('mtabs-'+ac);
-  const content=document.getElementById('mtabsContent-'+ac);
-  nav.innerHTML='';content.innerHTML='';
+  const cont=document.getElementById('mtabsContent-'+ac);
+  nav.innerHTML='';cont.innerHTML='';
   MONTHS.forEach((m,i)=>{
     const btn=document.createElement('button');
     btn.className='mtab-btn'+(i===0?' active':'');
-    btn.id='mtab-'+ac+'-'+m.id;
-    btn.textContent=m.short;
-    btn.onclick=()=>switchMonthTab(ac,m.id);
-    nav.appendChild(btn);
+    btn.id='mtab-'+ac+'-'+m.id;btn.textContent=m.short;
+    btn.onclick=()=>switchMonthTab(ac,m.id);nav.appendChild(btn);
     const panel=document.createElement('div');
     panel.className='mtab-panel'+(i===0?' active':'');
     panel.id='mtabpanel-'+ac+'-'+m.id;
-    panel.innerHTML=buildMonthTable(ac,m);
-    content.appendChild(panel);
+    panel.innerHTML=buildTable(ac,m);cont.appendChild(panel);
   });
 }
 
-function buildMonthTable(ac,m){
+function buildTable(ac,m){
   const rows=acctData[ac].months[m.id]?.rows||[];
-  let tbody='';
+  let tb='';
   rows.forEach((r,ri)=>{
-    const pClass=r.profit&&r.profit!=='—'?(r.profit.startsWith('-')?'profit-neg':'profit-pos'):'';
-    tbody+=`<tr>
-      <td class="date-col">${r.date}</td>
-      <td class="${pClass}" data-editable data-acct="${ac}" data-month="${m.id}" data-row="${ri}" data-field="profit" contenteditable="false">${r.profit||'—'}</td>
+    const pc=r.profit&&r.profit!=='—'?(r.profit.startsWith('-')?'profit-neg':'profit-pos'):'';
+    tb+=`<tr><td class="date-col">${r.date}</td>
+      <td class="${pc}" data-editable data-acct="${ac}" data-month="${m.id}" data-row="${ri}" data-field="profit" contenteditable="false">${r.profit||'—'}</td>
       <td class="dd-val" data-editable data-acct="${ac}" data-month="${m.id}" data-row="${ri}" data-field="dd" contenteditable="false">${r.dd||'—'}</td>
-      <td data-editable data-acct="${ac}" data-month="${m.id}" data-row="${ri}" data-field="notes" contenteditable="false" style="color:var(--text3);font-size:12px">${r.notes||''}</td>
-    </tr>`;
+      <td data-editable data-acct="${ac}" data-month="${m.id}" data-row="${ri}" data-field="notes" contenteditable="false" style="color:var(--text3);font-size:12px">${r.notes||''}</td></tr>`;
   });
-  tbody+=`<tr class="total-row">
-    <td style="color:var(--text3);font-size:10px;letter-spacing:0.1em">TOTAL ${m.short.toUpperCase()}</td>
+  tb+=`<tr class="total-row"><td style="font-size:10px;letter-spacing:0.1em;color:var(--text3)">TOTAL ${m.short.toUpperCase()}</td>
     <td class="profit-pos" id="rowtotal-${ac}-${m.id}">—</td>
-    <td id="rowdd-${ac}-${m.id}" class="dd-val">—</td>
-    <td></td>
-  </tr>`;
-  return `<div class="table-wrap"><table>
-    <thead><tr><th>Date</th><th>Profit (USD)</th><th>Max DD (%)</th><th>Notes</th></tr></thead>
-    <tbody>${tbody}</tbody>
-  </table></div>`;
+    <td class="dd-val" id="rowdd-${ac}-${m.id}">—</td><td></td></tr>`;
+  return `<div class="table-wrap"><table><thead><tr>
+    <th>Date</th><th>Profit (USD)</th><th>Max DD (%)</th><th>Notes</th>
+  </tr></thead><tbody>${tb}</tbody></table></div>`;
+}
+
+function buildRecap(ac){
+  document.getElementById('recap-'+ac).innerHTML=`
+    <div class="recap-card"><div class="recap-label">Total Profit <span class="recap-auto-badge">auto</span></div>
+      <div class="recap-val green" id="recap-tp-${ac}">—</div><div class="recap-sub" id="recap-tpp-${ac}">—</div></div>
+    <div class="recap-card"><div class="recap-label">Max Drawdown <span class="recap-auto-badge">auto</span></div>
+      <div class="recap-val red" id="recap-dd-${ac}">—</div><div class="recap-sub">Terbesar sepanjang tempoh</div></div>
+    <div class="recap-card"><div class="recap-label">Win Rate <span class="recap-auto-badge">auto</span></div>
+      <div class="recap-val purple" id="recap-wr-${ac}">—</div><div class="recap-sub" id="recap-tt-${ac}">—</div></div>
+    <div class="recap-card"><div class="recap-label">Monthly Return <span class="recap-auto-badge">auto</span></div>
+      <div class="recap-val amber" id="recap-mr-${ac}">—</div><div class="recap-sub" id="recap-mrp-${ac}">—</div></div>`;
 }
 
 function switchMonthTab(ac,id){
@@ -530,140 +579,98 @@ function switchMonthTab(ac,id){
   document.querySelectorAll(`#monthGrid-${ac} .mcard`).forEach(c=>c.classList.remove('active-month'));
   document.getElementById('mtab-'+ac+'-'+id).classList.add('active');
   document.getElementById('mtabpanel-'+ac+'-'+id).classList.add('active');
-  const mc=document.getElementById('mc-'+ac+'-'+id);
-  if(mc)mc.classList.add('active-month');
+  const mc=document.getElementById('mc-'+ac+'-'+id);if(mc)mc.classList.add('active-month');
   if(editMode)document.querySelectorAll('td[data-editable]').forEach(el=>el.contentEditable='true');
 }
 
-// ─── BUILD RECAP ──────────────────────────────────────────────────────────────
-function buildRecap(ac){
-  const r=document.getElementById('recap-'+ac);
-  r.innerHTML=`
-    <div class="recap-card">
-      <div class="recap-label">Total Profit <span class="recap-auto-badge">auto</span></div>
-      <div class="recap-val green" id="recap-totalProfit-${ac}">—</div>
-      <div class="recap-sub" id="recap-totalProfitPct-${ac}">— % dari capital</div>
-    </div>
-    <div class="recap-card">
-      <div class="recap-label">Max Drawdown <span class="recap-auto-badge">auto</span></div>
-      <div class="recap-val red" id="recap-maxDD-${ac}">—</div>
-      <div class="recap-sub">Terbesar sepanjang tempoh</div>
-    </div>
-    <div class="recap-card">
-      <div class="recap-label">Win Rate <span class="recap-auto-badge">auto</span></div>
-      <div class="recap-val purple" id="recap-winRate-${ac}">—</div>
-      <div class="recap-sub" id="recap-totalTrades-${ac}">— trades</div>
-    </div>
-    <div class="recap-card">
-      <div class="recap-label">Monthly Return (Semasa) <span class="recap-auto-badge">auto</span></div>
-      <div class="recap-val amber" id="recap-monthReturn-${ac}">—</div>
-      <div class="recap-sub" id="recap-monthReturnPct-${ac}">—</div>
-    </div>`;
-}
-
 // ─── UPDATE DISPLAY ───────────────────────────────────────────────────────────
-function fmt(n,dec=2){return isNaN(n)?'—':n.toFixed(dec);}
-function fmtUsd(n){if(isNaN(n))return'—';return(n>=0?'+$':'-$')+Math.abs(n).toFixed(2);}
-function fmtPct(n){if(isNaN(n))return'—';return(n>=0?'+':'')+n.toFixed(2)+'%';}
-function colClass(n){return isNaN(n)?'':(n>=0?'pos':'neg');}
+function fmt2(n){return isNaN(n)?'—':n.toFixed(2);}
+function fmtU(n){if(isNaN(n))return'—';return(n>=0?'+$':'-$')+Math.abs(n).toFixed(2);}
+function fmtP(n){if(isNaN(n))return'—';return(n>=0?'+':'')+n.toFixed(2)+'%';}
+function col(n){return isNaN(n)?'pos':(n>=0?'pos':'neg');}
+function setEl(id,txt){const e=document.getElementById(id);if(e)e.textContent=txt;}
 
 function updateDisplay(ac){
   const st=calcAccount(ac);
-
-  // Summary cards
-  const setEl=(id,txt,cls)=>{const e=document.getElementById(id);if(e){e.textContent=txt;if(cls)e.className=e.className.replace(/\b(green|red|amber|blue|purple)\b/g,'')+' '+cls;}};
-  setEl('totalProfit-'+ac, fmtUsd(st.totalProfit), st.totalProfit>=0?'scard-val green':'scard-val red');
-  document.getElementById('totalProfitPct-'+ac).textContent=fmtPct(st.totalProfitPct)+' dari capital';
-  setEl('maxDD-'+ac, isNaN(st.maxDD)||st.maxDD===0?'—':st.maxDD.toFixed(2)+'%','scard-val red');
-  setEl('monthReturn-'+ac, fmtUsd(st.monthReturn), st.monthReturn>=0?'scard-val amber':'scard-val red');
-  document.getElementById('monthReturnPct-'+ac).textContent=fmtPct(st.monthReturnPct)+' bulan ini';
-  setEl('winRate-'+ac, st.totalTrades>0?st.winRate+'%':'—','scard-val purple');
-  document.getElementById('totalTrades-'+ac).textContent=st.totalTrades+' trades direkod';
-
-  // Monthly grid
+  setEl('totalProfit-'+ac,fmtU(st.totalProfit));
+  setEl('totalProfitPct-'+ac,fmtP(st.totalProfitPct)+' dari capital');
+  setEl('maxDD-'+ac,st.maxDD>0?fmt2(st.maxDD)+'%':'—');
+  setEl('monthReturn-'+ac,fmtU(st.monthReturn));
+  setEl('monthReturnPct-'+ac,fmtP(st.monthReturnPct)+' bulan ini');
+  setEl('winRate-'+ac,st.totalTrades>0?st.winRate+'%':'—');
+  setEl('totalTrades-'+ac,st.totalTrades+' trades direkod');
   MONTHS.forEach(m=>{
     const mt=st.monthTotals[m.id];
-    const uEl=document.getElementById('mcusd-'+ac+'-'+m.id);
-    const pEl=document.getElementById('mcpct-'+ac+'-'+m.id);
-    if(uEl){uEl.textContent=mt.trades>0?fmtUsd(mt.profit):'—';uEl.className='mcard-usd '+colClass(mt.profit);}
-    if(pEl){pEl.textContent=mt.trades>0?fmtPct(mt.pct):'—';pEl.className='mcard-pct '+colClass(mt.pct);}
-    // Row totals in table
+    const ue=document.getElementById('mcusd-'+ac+'-'+m.id);
+    const pe=document.getElementById('mcpct-'+ac+'-'+m.id);
+    if(ue){ue.textContent=mt.trades>0?fmtU(mt.profit):'—';ue.className='mcard-usd '+col(mt.profit);}
+    if(pe){pe.textContent=mt.trades>0?fmtP(mt.pct):'—';pe.className='mcard-pct '+col(mt.pct);}
     const rt=document.getElementById('rowtotal-'+ac+'-'+m.id);
     const rd=document.getElementById('rowdd-'+ac+'-'+m.id);
-    if(rt){rt.textContent=mt.trades>0?fmtUsd(mt.profit):'—';rt.className=mt.profit>=0?'profit-pos':'profit-neg';}
-    if(rd){rd.textContent=mt.maxDD>0?mt.maxDD.toFixed(2)+'%':'—';}
+    if(rt){rt.textContent=mt.trades>0?fmtU(mt.profit):'—';rt.className=mt.profit>=0?'profit-pos':'profit-neg';}
+    if(rd)rd.textContent=mt.maxDD>0?fmt2(mt.maxDD)+'%':'—';
   });
-
-  // Recap
-  const setR=(id,txt)=>{const e=document.getElementById(id);if(e)e.textContent=txt;};
-  setR('recap-totalProfit-'+ac, fmtUsd(st.totalProfit));
-  setR('recap-totalProfitPct-'+ac, fmtPct(st.totalProfitPct)+' dari capital');
-  setR('recap-maxDD-'+ac, st.maxDD>0?st.maxDD.toFixed(2)+'%':'—');
-  setR('recap-winRate-'+ac, st.totalTrades>0?st.winRate+'%':'—');
-  setR('recap-totalTrades-'+ac, st.totalTrades+' trades direkod');
-  setR('recap-monthReturn-'+ac, fmtUsd(st.monthReturn));
-  setR('recap-monthReturnPct-'+ac, fmtPct(st.monthReturnPct)+' bulan semasa');
+  setEl('recap-tp-'+ac,fmtU(st.totalProfit));
+  setEl('recap-tpp-'+ac,fmtP(st.totalProfitPct)+' dari capital');
+  setEl('recap-dd-'+ac,st.maxDD>0?fmt2(st.maxDD)+'%':'—');
+  setEl('recap-wr-'+ac,st.totalTrades>0?st.winRate+'%':'—');
+  setEl('recap-tt-'+ac,st.totalTrades+' trades direkod');
+  setEl('recap-mr-'+ac,fmtU(st.monthReturn));
+  setEl('recap-mrp-'+ac,fmtP(st.monthReturnPct)+' bulan semasa');
 }
-
 function recalcAll(){ACCOUNTS.forEach(ac=>updateDisplay(ac));}
 
 // ─── ACCOUNT SWITCH ───────────────────────────────────────────────────────────
-let curAcct='hr';
 function switchAccount(ac){
   curAcct=ac;
   ACCOUNTS.forEach(a=>{
-    document.getElementById('section-'+a).style.display=a===ac?'':'none';
+    document.getElementById('section-'+a).style.display=a===ac?'block':'none';
     const btn=document.getElementById('btn-'+a);
     btn.className='acct-btn'+(a===ac?' active-'+a:'');
   });
 }
 
-// ─── SAVE TABLE EDITS ─────────────────────────────────────────────────────────
+// ─── BLUR SAVE ────────────────────────────────────────────────────────────────
 document.addEventListener('blur',function(e){
   const el=e.target;
-  if(!el.hasAttribute('data-editable'))return;
-  const ac=el.getAttribute('data-acct');
-  const month=el.getAttribute('data-month');
-  const row=el.getAttribute('data-row');
-  const field=el.getAttribute('data-field');
-  const val=el.textContent.trim();
-  if(!ac||!month||row===null)return;
-  const ri=parseInt(row);
-  if(!isNaN(ri)&&acctData[ac]?.months[month]?.rows[ri]){
-    acctData[ac].months[month].rows[ri][field]=val;
-    if(field==='profit'){
-      el.className=val&&val!=='—'?(val.startsWith('-')?'profit-neg':'profit-pos'):'';
-      el.setAttribute('data-editable','');
+  if(el.hasAttribute('data-editable')){
+    const ac=el.dataset.acct,month=el.dataset.month,row=el.dataset.row,field=el.dataset.field;
+    const val=el.textContent.trim();
+    const ri=parseInt(row);
+    if(!isNaN(ri)&&acctData[ac]?.months[month]?.rows[ri]){
+      acctData[ac].months[month].rows[ri][field]=val;
+      if(field==='profit'){el.className=val&&val!=='—'?(val.startsWith('-')?'profit-neg':'profit-pos'):'';el.setAttribute('data-editable','');}
+      updateDisplay(ac);
     }
-    updateDisplay(ac);
+  }
+  if(el.classList.contains('editable')){
+    const ac=el.dataset.acct,field=el.dataset.field;
+    if(ac&&field==='capital'){acctData[ac].capital=el.textContent.trim().replace(/[^0-9.]/g,'')||'10000';updateDisplay(ac);}
   }
 },true);
 
-// capital editable
-document.addEventListener('blur',function(e){
-  const el=e.target;
-  if(!el.classList.contains('editable'))return;
-  const ac=el.getAttribute('data-acct');
-  const field=el.getAttribute('data-field');
-  if(ac&&field==='capital'){
-    acctData[ac].capital=el.textContent.trim().replace(/[^0-9.]/g,'')||'10000';
+// ─── REBUILD ALL ──────────────────────────────────────────────────────────────
+function rebuildAll(){
+  ACCOUNTS.forEach(ac=>{
+    buildSection(ac);
     updateDisplay(ac);
-  }
-},true);
+  });
+  document.getElementById('btn-hr').textContent='⚡ '+acctNames.hr;
+  document.getElementById('btn-mr').textContent='🔵 '+acctNames.mr;
+  document.getElementById('nameHR').value=acctNames.hr;
+  document.getElementById('nameMR').value=acctNames.mr;
+}
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 initData();
-loadAll();
-ACCOUNTS.forEach(ac=>{
-  buildCards(ac);
-  buildMonthGrid(ac);
-  buildMonthTabs(ac);
-  buildRecap(ac);
-  updateDisplay(ac);
-});
-// sync button names
-document.getElementById('btn-hr').textContent='⚡ '+acctNames.hr;
-document.getElementById('btn-mr').textContent='🔵 '+acctNames.mr;
+if(SCRIPT_URL){
+  document.getElementById('setupBanner').classList.add('hidden');
+  loadFromSheets();
+}else{
+  loadFromLocal();
+  setSyncStatus('','Letak URL Google Sheets untuk sync');
+}
+ACCOUNTS.forEach(ac=>document.getElementById('btn-'+ac).textContent=(ac==='hr'?'⚡ ':'🔵 ')+acctNames[ac]);
 </script>
 </body>
 </html>
