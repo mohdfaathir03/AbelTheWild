@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AbelTheWild Robotic System</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,300;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0b0e; --bg2:#111318; --bg3:#181c24; --bg4:#1e2330;
+  --border:rgba(255,255,255,0.06); --border2:rgba(255,255,255,0.12);
+  --text:#e8eaf0; --text2:#8a90a0; --text3:#555b6e;
+  --green:#00d17a; --green-dim:rgba(0,209,122,0.12);
+  --red:#ff4d6d; --red-dim:rgba(255,77,109,0.12);
+  --amber:#f5a623; --amber-dim:rgba(245,166,35,0.12);
+  --blue:#4d9fff; --blue-dim:rgba(77,159,255,0.1);
+  --accent:#00d17a;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;}
+.wrap{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:40px 24px 80px;}
+
+/* PIN */
+#pinOverlay{display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.8);backdrop-filter:blur(8px);align-items:center;justify-content:center;}
+#pinOverlay.show{display:flex;}
+.pin-box{background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:40px 36px;width:320px;text-align:center;animation:fadeIn 0.25s ease;}
+.pin-title{font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.pin-sub{font-size:12px;color:var(--text3);margin-bottom:28px;font-family:'DM Mono',monospace;}
+.pin-dots{display:flex;justify-content:center;gap:12px;margin-bottom:24px;}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--border2);background:transparent;transition:all 0.15s;}
+.pin-dot.filled{background:var(--green);border-color:var(--green);}
+.pin-dot.error{background:var(--red);border-color:var(--red);}
+.pin-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+.pin-key{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px;font-family:'DM Mono',monospace;font-size:18px;font-weight:500;color:var(--text);cursor:pointer;transition:all 0.12s;user-select:none;}
+.pin-key:hover{background:var(--bg4);border-color:var(--border2);}
+.pin-key:active{transform:scale(0.95);}
+.pin-key.del{font-size:14px;color:var(--text2);}
+.pin-key.empty{background:transparent;border:none;cursor:default;}
+.pin-error{font-size:12px;color:var(--red);font-family:'DM Mono',monospace;height:16px;}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.shake{animation:shake 0.35s ease;}
+
+/* HEADER */
+.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px;}
+.logo-badge{font-size:10px;letter-spacing:0.2em;color:var(--text3);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.logo-badge::before{content:'';width:24px;height:1px;background:var(--accent);}
+.logo-title{font-size:32px;font-weight:800;color:var(--text);line-height:1.1;}
+.logo-title span{color:var(--accent);}
+.logo-sub{font-size:18px;color:transparent;background:linear-gradient(90deg,#a8896a 0%,#e8d5b0 50%,#a8896a 100%);-webkit-background-clip:text;background-clip:text;margin-top:10px;font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:300;letter-spacing:0.04em;position:relative;padding-left:18px;}
+.logo-sub::before{content:'"';position:absolute;left:0;top:-2px;font-size:28px;color:#a8896a;opacity:0.5;font-family:'Cormorant Garamond',serif;line-height:1;}
+.header-right{text-align:right;}
+.live-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--green);background:var(--green-dim);border:1px solid rgba(0,209,122,0.2);padding:5px 12px;border-radius:20px;font-family:'DM Mono',monospace;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.last-update{font-size:11px;color:var(--text3);margin-top:8px;font-family:'DM Mono',monospace;}
+
+/* ACCOUNT SWITCHER */
+.acct-switcher{display:flex;gap:6px;margin-bottom:28px;padding:4px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;width:fit-content;}
+.acct-btn{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:9px 22px;border-radius:8px;border:none;cursor:pointer;background:transparent;color:var(--text3);transition:all 0.2s;}
+.acct-btn:hover{color:var(--text2);}
+.acct-btn.active-hr{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,77,109,0.25);}
+.acct-btn.active-mr{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(77,159,255,0.25);}
+.acct-name-edit{display:none;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;align-items:center;gap:6px;margin-bottom:16px;}
+.acct-name-edit.show{display:flex;}
+.acct-name-input{background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:4px 10px;font-family:'Syne',sans-serif;font-size:12px;color:var(--text);outline:none;width:160px;}
+
+/* ADMIN BAR */
+.edit-bar{display:none;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+.edit-bar.visible{display:flex;}
+.edit-btn{display:inline-flex;align-items:center;gap:7px;font-family:'Syne',sans-serif;font-size:12px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:8px 18px;border-radius:6px;cursor:pointer;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);transition:all 0.2s;}
+.edit-btn:hover{background:var(--bg4);color:var(--text);}
+.edit-btn.active{background:var(--green-dim);color:var(--green);border-color:rgba(0,209,122,0.3);}
+.admin-tag{font-size:10px;color:var(--green);background:var(--green-dim);border:1px solid rgba(0,209,122,0.2);padding:3px 10px;border-radius:20px;letter-spacing:0.1em;font-family:'DM Mono',monospace;}
+.edit-hint{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;}
+.lock-btn{display:inline-flex;align-items:center;gap:6px;font-family:'Syne',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:6px 14px;border-radius:6px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text3);transition:all 0.2s;margin-left:auto;}
+.lock-btn:hover{color:var(--red);border-color:rgba(255,77,109,0.3);}
+.viewer-hint{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:20px;cursor:pointer;width:fit-content;}
+.viewer-hint:hover{color:var(--text2);}
+.viewer-hint.hidden{display:none;}
+
+/* SUMMARY CARDS */
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin-bottom:28px;}
+.scard{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px 18px 14px;position:relative;overflow:hidden;transition:border-color 0.2s;}
+.scard::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent-color,var(--border));border-radius:12px 12px 0 0;}
+.scard.green{--accent-color:var(--green);}
+.scard.red{--accent-color:var(--red);}
+.scard.amber{--accent-color:var(--amber);}
+.scard.blue{--accent-color:var(--blue);}
+.scard.purple{--accent-color:#a78bfa;}
+.scard-label{font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);margin-bottom:10px;}
+.scard-val{font-family:'DM Mono',monospace;font-size:20px;font-weight:500;color:var(--text);}
+.scard-val.green{color:var(--green);}
+.scard-val.red{color:var(--red);}
+.scard-val.amber{color:var(--amber);}
+.scard-val.blue{color:var(--blue);}
+.scard-val.purple{color:#a78bfa;}
+.scard-sub{font-size:11px;color:var(--text3);margin-top:4px;font-family:'DM Mono',monospace;}
+.scard-auto{font-size:9px;letter-spacing:0.1em;color:var(--green);opacity:0.6;margin-top:2px;text-transform:uppercase;}
+[contenteditable="true"]{outline:none;border-bottom:1px solid var(--accent);cursor:text;}
+
+/* MONTH TABS */
+.mtabs-nav{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:16px;border-bottom:1px solid var(--border);}
+.mtab-btn{font-family:'Syne',sans-serif;font-size:12px;font-weight:600;letter-spacing:0.04em;padding:9px 14px;cursor:pointer;background:transparent;color:var(--text3);border:none;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.15s;border-radius:4px 4px 0 0;}
+.mtab-btn:hover{color:var(--text2);background:var(--bg3);}
+.mtab-btn.active{color:var(--green);border-bottom-color:var(--green);}
+.mtab-panel{display:none;}
+.mtab-panel.active{display:block;}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border);background:var(--bg2);}
+table{width:100%;border-collapse:collapse;font-family:'DM Mono',monospace;font-size:13px;}
+thead tr{border-bottom:1px solid var(--border2);}
+thead th{padding:13px 16px;font-family:'Syne',sans-serif;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);text-align:left;font-weight:600;white-space:nowrap;}
+thead th:not(:first-child){text-align:right;}
+tbody tr{border-bottom:1px solid var(--border);transition:background 0.15s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:var(--bg3);}
+tbody td{padding:11px 16px;color:var(--text2);white-space:nowrap;}
+tbody td:not(:first-child){text-align:right;}
+td.profit-pos{color:var(--green);font-weight:500;}
+td.profit-neg{color:var(--red);font-weight:500;}
+td.dd-val{color:var(--red);}
+td.date-col{color:var(--text);font-size:12px;}
+tbody tr.total-row{background:var(--bg3);border-top:1px solid var(--border2);}
+tbody tr.total-row td{color:var(--text);font-weight:600;}
+
+/* MONTHLY OVERVIEW */
+.section-head{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+.section-head::after{content:'';flex:1;height:1px;background:var(--border);}
+.monthly-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:32px;}
+.mcard{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:13px 15px;cursor:pointer;transition:all 0.15s;}
+.mcard:hover{border-color:var(--border2);background:var(--bg3);}
+.mcard.active-month{border-color:rgba(0,209,122,0.3);background:var(--green-dim);}
+.mcard-month{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;font-family:'Syne',sans-serif;}
+.mcard-usd{font-family:'DM Mono',monospace;font-size:14px;font-weight:500;}
+.mcard-usd.pos{color:var(--green);}
+.mcard-usd.neg{color:var(--red);}
+.mcard-pct{font-family:'DM Mono',monospace;font-size:11px;margin-top:2px;}
+.mcard-pct.pos{color:rgba(0,209,122,0.6);}
+.mcard-pct.neg{color:rgba(255,77,109,0.6);}
+
+/* RECAP SECTION */
+.recap-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:8px;}
+.recap-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px 20px;}
+.recap-label{font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;}
+.recap-val{font-family:'DM Mono',monospace;font-size:22px;font-weight:500;}
+.recap-val.green{color:var(--green);}
+.recap-val.red{color:var(--red);}
+.recap-val.amber{color:var(--amber);}
+.recap-val.blue{color:var(--blue);}
+.recap-val.purple{color:#a78bfa;}
+.recap-sub{font-size:11px;color:var(--text3);margin-top:4px;font-family:'DM Mono',monospace;}
+.recap-auto-badge{display:inline-block;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);border:1px solid rgba(0,209,122,0.2);padding:1px 6px;border-radius:4px;margin-left:6px;vertical-align:middle;}
+
+/* FOOTER */
+.footer{margin-top:48px;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;border-top:1px solid var(--border);padding-top:20px;}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.scard,.mcard,.recap-card{animation:fadeIn 0.35s ease forwards;}
+.acct-section{animation:fadeIn 0.25s ease forwards;}
+</style>
+</head>
+<body>
+
+<!-- PIN MODAL -->
+<div id="pinOverlay">
+  <div class="pin-box" id="pinBox">
+    <div class="pin-title">Admin Access</div>
+    <div class="pin-sub">Masukkan PIN untuk edit</div>
+    <div class="pin-dots" id="pinDots">
+      <div class="pin-dot" id="d0"></div><div class="pin-dot" id="d1"></div>
+      <div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div>
+    </div>
+    <div class="pin-keypad">
+      <div class="pin-key" onclick="pressKey('1')">1</div><div class="pin-key" onclick="pressKey('2')">2</div><div class="pin-key" onclick="pressKey('3')">3</div>
+      <div class="pin-key" onclick="pressKey('4')">4</div><div class="pin-key" onclick="pressKey('5')">5</div><div class="pin-key" onclick="pressKey('6')">6</div>
+      <div class="pin-key" onclick="pressKey('7')">7</div><div class="pin-key" onclick="pressKey('8')">8</div><div class="pin-key" onclick="pressKey('9')">9</div>
+      <div class="pin-key empty"></div><div class="pin-key" onclick="pressKey('0')">0</div><div class="pin-key del" onclick="pressDelete()">⌫</div>
+    </div>
+    <div class="pin-error" id="pinError"></div>
+  </div>
+</div>
+
+<div class="wrap">
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <div class="logo-badge">Expert Advisor</div>
+      <div class="logo-title">AbelThe<span>Wild</span><br>Robotic System</div>
+      <div class="logo-sub">Trading for a Living</div>
+    </div>
+    <div class="header-right">
+      <div class="live-badge"><span class="live-dot"></span>LIVE</div>
+      <div class="last-update" id="lastUpdate">—</div>
+    </div>
+  </div>
+
+  <!-- VIEWER HINT -->
+  <div class="viewer-hint" id="viewerHint" onclick="openPin()">🔒 <span>Admin login</span></div>
+
+  <!-- ADMIN BAR -->
+  <div class="edit-bar" id="editBar">
+    <span class="admin-tag">● ADMIN</span>
+    <button class="edit-btn" id="editBtn" onclick="toggleEdit()">✦ <span id="editLabel">Edit Mode</span></button>
+    <span class="edit-hint" id="editHint">Aktifkan untuk kemaskini nilai</span>
+    <button class="lock-btn" onclick="lockAdmin()">🔒 Log keluar</button>
+  </div>
+
+  <!-- ACCOUNT SWITCHER -->
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap;">
+    <div class="acct-switcher">
+      <button class="acct-btn active-hr" id="btn-hr" onclick="switchAccount('hr')">⚡ High Risk</button>
+      <button class="acct-btn" id="btn-mr" onclick="switchAccount('mr')">🔵 Medium Risk</button>
+    </div>
+    <div class="acct-name-edit" id="nameEditBar">
+      <span style="color:var(--text3)">Rename:</span>
+      <input class="acct-name-input" id="nameHR" placeholder="High Risk" oninput="renameAccount('hr',this.value)">
+      <input class="acct-name-input" id="nameMR" placeholder="Medium Risk" oninput="renameAccount('mr',this.value)">
+    </div>
+  </div>
+
+  <!-- ACCOUNT SECTIONS -->
+  <div id="section-hr" class="acct-section">
+    <!-- SUMMARY CARDS HR -->
+    <div class="summary-grid" id="cards-hr"></div>
+    <!-- MONTHLY OVERVIEW HR -->
+    <div class="section-head">Monthly Return Overview</div>
+    <div class="monthly-grid" id="monthGrid-hr"></div>
+    <!-- MONTH TABS HR -->
+    <div class="section-head" style="margin-top:8px;">Profit by Date</div>
+    <div class="mtabs-nav" id="mtabs-hr"></div>
+    <div id="mtabsContent-hr"></div>
+    <!-- RECAP HR -->
+    <div class="section-head" style="margin-top:32px;">Recap</div>
+    <div class="recap-grid" id="recap-hr"></div>
+  </div>
+
+  <div id="section-mr" class="acct-section" style="display:none;">
+    <!-- SUMMARY CARDS MR -->
+    <div class="summary-grid" id="cards-mr"></div>
+    <!-- MONTHLY OVERVIEW MR -->
+    <div class="section-head">Monthly Return Overview</div>
+    <div class="monthly-grid" id="monthGrid-mr"></div>
+    <!-- MONTH TABS MR -->
+    <div class="section-head" style="margin-top:8px;">Profit by Date</div>
+    <div class="mtabs-nav" id="mtabs-mr"></div>
+    <div id="mtabsContent-mr"></div>
+    <!-- RECAP MR -->
+    <div class="section-head" style="margin-top:32px;">Recap</div>
+    <div class="recap-grid" id="recap-mr"></div>
+  </div>
+
+  <div class="footer">
+    <span>AbelTheWild Robotic System © 2025</span>
+    <span>Data dikemaskini secara manual · Tiada MT5 access diperlukan</span>
+  </div>
+</div>
+
+<script>
+// ─── PIN ──────────────────────────────────────────────────────────────────────
+const CORRECT_PIN='1109';
+let pinInput='',isAdmin=false,editMode=false;
+function openPin(){pinInput='';updateDots();document.getElementById('pinError').textContent='';document.getElementById('pinOverlay').classList.add('show');}
+function closePin(){document.getElementById('pinOverlay').classList.remove('show');pinInput='';updateDots();}
+function pressKey(k){if(pinInput.length>=4)return;pinInput+=k;updateDots();if(pinInput.length===4)setTimeout(checkPin,120);}
+function pressDelete(){pinInput=pinInput.slice(0,-1);updateDots();document.getElementById('pinError').textContent='';}
+function updateDots(){for(let i=0;i<4;i++){const d=document.getElementById('d'+i);d.classList.toggle('filled',i<pinInput.length);d.classList.remove('error');}}
+function checkPin(){
+  if(pinInput===CORRECT_PIN){
+    isAdmin=true;closePin();
+    document.getElementById('viewerHint').classList.add('hidden');
+    document.getElementById('editBar').classList.add('visible');
+    updateLastTime();
+  } else {
+    for(let i=0;i<4;i++)document.getElementById('d'+i).classList.add('error');
+    document.getElementById('pinBox').classList.add('shake');
+    document.getElementById('pinError').textContent='PIN salah. Cuba lagi.';
+    setTimeout(()=>{document.getElementById('pinBox').classList.remove('shake');pinInput='';updateDots();},400);
+  }
+}
+document.addEventListener('keydown',e=>{
+  if(!document.getElementById('pinOverlay').classList.contains('show'))return;
+  if(e.key>='0'&&e.key<='9')pressKey(e.key);
+  if(e.key==='Backspace')pressDelete();
+  if(e.key==='Escape')closePin();
+});
+document.getElementById('pinOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('pinOverlay'))closePin();});
+function lockAdmin(){
+  isAdmin=false;editMode=false;
+  document.getElementById('editBar').classList.remove('visible');
+  document.getElementById('viewerHint').classList.remove('hidden');
+  document.getElementById('nameEditBar').classList.remove('show');
+  document.querySelectorAll('.editable').forEach(el=>el.contentEditable='false');
+  document.querySelectorAll('td[data-editable]').forEach(el=>el.contentEditable='false');
+  document.getElementById('editBtn').classList.remove('active');
+  document.getElementById('editLabel').textContent='Edit Mode';
+}
+
+// ─── EDIT MODE ────────────────────────────────────────────────────────────────
+function toggleEdit(){
+  if(!isAdmin)return;
+  editMode=!editMode;
+  document.getElementById('editBtn').classList.toggle('active',editMode);
+  document.getElementById('editLabel').textContent=editMode?'Selesai Edit':'Edit Mode';
+  document.getElementById('editHint').textContent=editMode?'Klik nilai untuk ubah':'Aktifkan untuk kemaskini nilai';
+  document.getElementById('nameEditBar').classList.toggle('show',editMode);
+  document.querySelectorAll('.editable').forEach(el=>el.contentEditable=editMode?'true':'false');
+  document.querySelectorAll('td[data-editable]').forEach(el=>el.contentEditable=editMode?'true':'false');
+  if(!editMode){recalcAll();saveAll();updateLastTime();}
+}
+
+// ─── TIME ─────────────────────────────────────────────────────────────────────
+function updateLastTime(){
+  const now=new Date();
+  document.getElementById('lastUpdate').textContent='Kemaskini: '+now.toLocaleString('ms-MY',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+updateLastTime();
+
+// ─── MONTHS ───────────────────────────────────────────────────────────────────
+const MONTHS=[
+  {id:'jun',label:'Jun 2025',short:'Jun',days:30,start:'2025-06-01'},
+  {id:'jul',label:'Jul 2025',short:'Jul',days:31,start:'2025-07-01'},
+  {id:'aug',label:'Aug 2025',short:'Aug',days:31,start:'2025-08-01'},
+  {id:'sep',label:'Sep 2025',short:'Sep',days:30,start:'2025-09-01'},
+  {id:'oct',label:'Oct 2025',short:'Oct',days:31,start:'2025-10-01'},
+  {id:'nov',label:'Nov 2025',short:'Nov',days:30,start:'2025-11-01'},
+  {id:'dec',label:'Dec 2025',short:'Dec',days:31,start:'2025-12-01'},
+  {id:'jan',label:'Jan 2026',short:'Jan',days:31,start:'2026-01-01'},
+  {id:'feb',label:'Feb 2026',short:'Feb',days:28,start:'2026-02-01'},
+  {id:'mar',label:'Mar 2026',short:'Mar',days:31,start:'2026-03-01'},
+  {id:'apr',label:'Apr 2026',short:'Apr',days:30,start:'2026-04-01'},
+  {id:'may',label:'May 2026',short:'May',days:31,start:'2026-05-01'},
+];
+
+// ─── DATA STORE ───────────────────────────────────────────────────────────────
+// accounts: hr = High Risk, mr = Medium Risk
+const ACCOUNTS=['hr','mr'];
+const acctNames={hr:'High Risk',mr:'Medium Risk'};
+const acctData={};
+
+function initData(){
+  ACCOUNTS.forEach(ac=>{
+    acctData[ac]={
+      capital:'10000',
+      months:{}
+    };
+    MONTHS.forEach(m=>{
+      const rows=[];
+      const d=new Date(m.start);
+      for(let i=0;i<m.days;i++){
+        const dd=String(d.getDate()).padStart(2,'0');
+        const mm=String(d.getMonth()+1).padStart(2,'0');
+        const yy=d.getFullYear();
+        rows.push({date:`${dd}/${mm}/${yy}`,profit:'',dd:'',notes:''});
+        d.setDate(d.getDate()+1);
+      }
+      acctData[ac].months[m.id]={rows};
+    });
+  });
+}
+
+// ─── STORAGE ──────────────────────────────────────────────────────────────────
+function saveAll(){
+  localStorage.setItem('abel2_data',JSON.stringify(acctData));
+  localStorage.setItem('abel2_names',JSON.stringify(acctNames));
+  localStorage.setItem('abel2_lastUpdate',document.getElementById('lastUpdate').textContent);
+}
+function loadAll(){
+  const d=localStorage.getItem('abel2_data');
+  if(d){const p=JSON.parse(d);ACCOUNTS.forEach(ac=>{if(p[ac])acctData[ac]=p[ac];});}
+  const n=localStorage.getItem('abel2_names');
+  if(n){const p=JSON.parse(n);ACCOUNTS.forEach(ac=>{if(p[ac])acctNames[ac]=p[ac];});}
+  const lu=localStorage.getItem('abel2_lastUpdate');
+  if(lu)document.getElementById('lastUpdate').textContent=lu;
+  // sync rename inputs
+  document.getElementById('nameHR').value=acctNames.hr;
+  document.getElementById('nameMR').value=acctNames.mr;
+}
+
+// ─── RENAME ───────────────────────────────────────────────────────────────────
+function renameAccount(ac,val){
+  acctNames[ac]=val||( ac==='hr'?'High Risk':'Medium Risk');
+  const btn=document.getElementById('btn-'+ac);
+  btn.textContent=(ac==='hr'?'⚡ ':'🔵 ')+acctNames[ac];
+}
+
+// ─── CALCULATE ────────────────────────────────────────────────────────────────
+function parseNum(s){
+  if(!s||s==='—')return NaN;
+  return parseFloat(s.replace(/[^0-9.\-]/g,''));
+}
+
+function calcAccount(ac){
+  const capital=parseNum(acctData[ac].capital)||10000;
+  let totalProfit=0,totalWins=0,totalTrades=0,maxDD=0;
+  const monthTotals={};
+
+  MONTHS.forEach(m=>{
+    const rows=acctData[ac].months[m.id]?.rows||[];
+    let mProfit=0,mWins=0,mTrades=0,mMaxDD=0;
+    rows.forEach(r=>{
+      const p=parseNum(r.profit);
+      const d=parseNum(r.dd);
+      if(!isNaN(p)){
+        mProfit+=p;mTrades++;
+        if(p>0)mWins++;
+      }
+      if(!isNaN(d)&&d>mMaxDD)mMaxDD=d;
+    });
+    monthTotals[m.id]={profit:mProfit,pct:(mProfit/capital*100),wins:mWins,trades:mTrades,maxDD:mMaxDD};
+    totalProfit+=mProfit;
+    totalWins+=mWins;
+    totalTrades+=mTrades;
+    if(mMaxDD>maxDD)maxDD=mMaxDD;
+  });
+
+  // current month = first month with any data, or latest
+  const now=new Date();
+  const curMonthId=MONTHS.find(m=>{
+    const d=new Date(m.start);
+    return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth();
+  })?.id||MONTHS[0].id;
+
+  const monthReturn=monthTotals[curMonthId]?.profit||0;
+  const monthReturnPct=(monthReturn/capital*100);
+  const winRate=totalTrades>0?Math.round(totalWins/totalTrades*100):0;
+
+  return {capital,totalProfit,totalProfitPct:(totalProfit/capital*100),maxDD,winRate,totalTrades,monthReturn,monthReturnPct,monthTotals,curMonthId};
+}
+
+// ─── BUILD SUMMARY CARDS ──────────────────────────────────────────────────────
+function buildCards(ac){
+  const c=document.getElementById('cards-'+ac);
+  c.innerHTML=`
+    <div class="scard blue">
+      <div class="scard-label">Total Capital</div>
+      <div class="scard-val blue">$<span class="editable" data-acct="${ac}" data-field="capital" contenteditable="false">${acctData[ac].capital}</span></div>
+      <div class="scard-sub">Modal aktif</div>
+    </div>
+    <div class="scard green">
+      <div class="scard-label">Total Profit</div>
+      <div class="scard-val green" id="totalProfit-${ac}">—</div>
+      <div class="scard-sub" id="totalProfitPct-${ac}">—</div>
+      <div class="scard-auto">auto</div>
+    </div>
+    <div class="scard red">
+      <div class="scard-label">Max Drawdown</div>
+      <div class="scard-val red" id="maxDD-${ac}">—</div>
+      <div class="scard-sub">Terbesar rekod</div>
+      <div class="scard-auto">auto</div>
+    </div>
+    <div class="scard amber">
+      <div class="scard-label">Monthly Return</div>
+      <div class="scard-val amber" id="monthReturn-${ac}">—</div>
+      <div class="scard-sub" id="monthReturnPct-${ac}">—</div>
+      <div class="scard-auto">auto · bulan semasa</div>
+    </div>
+    <div class="scard purple">
+      <div class="scard-label">Win Rate</div>
+      <div class="scard-val purple" id="winRate-${ac}">—</div>
+      <div class="scard-sub" id="totalTrades-${ac}">—</div>
+      <div class="scard-auto">auto</div>
+    </div>`;
+}
+
+// ─── BUILD MONTHLY GRID ───────────────────────────────────────────────────────
+function buildMonthGrid(ac){
+  const grid=document.getElementById('monthGrid-'+ac);
+  grid.innerHTML='';
+  MONTHS.forEach((m,i)=>{
+    const card=document.createElement('div');
+    card.className='mcard'+(i===0?' active-month':'');
+    card.id='mc-'+ac+'-'+m.id;
+    card.onclick=()=>switchMonthTab(ac,m.id);
+    card.innerHTML=`<div class="mcard-month">${m.short}</div>
+      <div class="mcard-usd pos" id="mcusd-${ac}-${m.id}">—</div>
+      <div class="mcard-pct pos" id="mcpct-${ac}-${m.id}">—</div>`;
+    grid.appendChild(card);
+  });
+}
+
+// ─── BUILD MONTH TABS ─────────────────────────────────────────────────────────
+function buildMonthTabs(ac){
+  const nav=document.getElementById('mtabs-'+ac);
+  const content=document.getElementById('mtabsContent-'+ac);
+  nav.innerHTML='';content.innerHTML='';
+  MONTHS.forEach((m,i)=>{
+    const btn=document.createElement('button');
+    btn.className='mtab-btn'+(i===0?' active':'');
+    btn.id='mtab-'+ac+'-'+m.id;
+    btn.textContent=m.short;
+    btn.onclick=()=>switchMonthTab(ac,m.id);
+    nav.appendChild(btn);
+    const panel=document.createElement('div');
+    panel.className='mtab-panel'+(i===0?' active':'');
+    panel.id='mtabpanel-'+ac+'-'+m.id;
+    panel.innerHTML=buildMonthTable(ac,m);
+    content.appendChild(panel);
+  });
+}
+
+function buildMonthTable(ac,m){
+  const rows=acctData[ac].months[m.id]?.rows||[];
+  let tbody='';
+  rows.forEach((r,ri)=>{
+    const pClass=r.profit&&r.profit!=='—'?(r.profit.startsWith('-')?'profit-neg':'profit-pos'):'';
+    tbody+=`<tr>
+      <td class="date-col">${r.date}</td>
+      <td class="${pClass}" data-editable data-acct="${ac}" data-month="${m.id}" data-row="${ri}" data-field="profit" contenteditable="false">${r.profit||'—'}</td>
+      <td class="dd-val" data-editable data-acct="${ac}" data-month="${m.id}" data-row="${ri}" data-field="dd" contenteditable="false">${r.dd||'—'}</td>
+      <td data-editable data-acct="${ac}" data-month="${m.id}" data-row="${ri}" data-field="notes" contenteditable="false" style="color:var(--text3);font-size:12px">${r.notes||''}</td>
+    </tr>`;
+  });
+  tbody+=`<tr class="total-row">
+    <td style="color:var(--text3);font-size:10px;letter-spacing:0.1em">TOTAL ${m.short.toUpperCase()}</td>
+    <td class="profit-pos" id="rowtotal-${ac}-${m.id}">—</td>
+    <td id="rowdd-${ac}-${m.id}" class="dd-val">—</td>
+    <td></td>
+  </tr>`;
+  return `<div class="table-wrap"><table>
+    <thead><tr><th>Date</th><th>Profit (USD)</th><th>Max DD (%)</th><th>Notes</th></tr></thead>
+    <tbody>${tbody}</tbody>
+  </table></div>`;
+}
+
+function switchMonthTab(ac,id){
+  document.querySelectorAll(`#mtabs-${ac} .mtab-btn`).forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll(`#mtabsContent-${ac} .mtab-panel`).forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll(`#monthGrid-${ac} .mcard`).forEach(c=>c.classList.remove('active-month'));
+  document.getElementById('mtab-'+ac+'-'+id).classList.add('active');
+  document.getElementById('mtabpanel-'+ac+'-'+id).classList.add('active');
+  const mc=document.getElementById('mc-'+ac+'-'+id);
+  if(mc)mc.classList.add('active-month');
+  if(editMode)document.querySelectorAll('td[data-editable]').forEach(el=>el.contentEditable='true');
+}
+
+// ─── BUILD RECAP ──────────────────────────────────────────────────────────────
+function buildRecap(ac){
+  const r=document.getElementById('recap-'+ac);
+  r.innerHTML=`
+    <div class="recap-card">
+      <div class="recap-label">Total Profit <span class="recap-auto-badge">auto</span></div>
+      <div class="recap-val green" id="recap-totalProfit-${ac}">—</div>
+      <div class="recap-sub" id="recap-totalProfitPct-${ac}">— % dari capital</div>
+    </div>
+    <div class="recap-card">
+      <div class="recap-label">Max Drawdown <span class="recap-auto-badge">auto</span></div>
+      <div class="recap-val red" id="recap-maxDD-${ac}">—</div>
+      <div class="recap-sub">Terbesar sepanjang tempoh</div>
+    </div>
+    <div class="recap-card">
+      <div class="recap-label">Win Rate <span class="recap-auto-badge">auto</span></div>
+      <div class="recap-val purple" id="recap-winRate-${ac}">—</div>
+      <div class="recap-sub" id="recap-totalTrades-${ac}">— trades</div>
+    </div>
+    <div class="recap-card">
+      <div class="recap-label">Monthly Return (Semasa) <span class="recap-auto-badge">auto</span></div>
+      <div class="recap-val amber" id="recap-monthReturn-${ac}">—</div>
+      <div class="recap-sub" id="recap-monthReturnPct-${ac}">—</div>
+    </div>`;
+}
+
+// ─── UPDATE DISPLAY ───────────────────────────────────────────────────────────
+function fmt(n,dec=2){return isNaN(n)?'—':n.toFixed(dec);}
+function fmtUsd(n){if(isNaN(n))return'—';return(n>=0?'+$':'-$')+Math.abs(n).toFixed(2);}
+function fmtPct(n){if(isNaN(n))return'—';return(n>=0?'+':'')+n.toFixed(2)+'%';}
+function colClass(n){return isNaN(n)?'':(n>=0?'pos':'neg');}
+
+function updateDisplay(ac){
+  const st=calcAccount(ac);
+
+  // Summary cards
+  const setEl=(id,txt,cls)=>{const e=document.getElementById(id);if(e){e.textContent=txt;if(cls)e.className=e.className.replace(/\b(green|red|amber|blue|purple)\b/g,'')+' '+cls;}};
+  setEl('totalProfit-'+ac, fmtUsd(st.totalProfit), st.totalProfit>=0?'scard-val green':'scard-val red');
+  document.getElementById('totalProfitPct-'+ac).textContent=fmtPct(st.totalProfitPct)+' dari capital';
+  setEl('maxDD-'+ac, isNaN(st.maxDD)||st.maxDD===0?'—':st.maxDD.toFixed(2)+'%','scard-val red');
+  setEl('monthReturn-'+ac, fmtUsd(st.monthReturn), st.monthReturn>=0?'scard-val amber':'scard-val red');
+  document.getElementById('monthReturnPct-'+ac).textContent=fmtPct(st.monthReturnPct)+' bulan ini';
+  setEl('winRate-'+ac, st.totalTrades>0?st.winRate+'%':'—','scard-val purple');
+  document.getElementById('totalTrades-'+ac).textContent=st.totalTrades+' trades direkod';
+
+  // Monthly grid
+  MONTHS.forEach(m=>{
+    const mt=st.monthTotals[m.id];
+    const uEl=document.getElementById('mcusd-'+ac+'-'+m.id);
+    const pEl=document.getElementById('mcpct-'+ac+'-'+m.id);
+    if(uEl){uEl.textContent=mt.trades>0?fmtUsd(mt.profit):'—';uEl.className='mcard-usd '+colClass(mt.profit);}
+    if(pEl){pEl.textContent=mt.trades>0?fmtPct(mt.pct):'—';pEl.className='mcard-pct '+colClass(mt.pct);}
+    // Row totals in table
+    const rt=document.getElementById('rowtotal-'+ac+'-'+m.id);
+    const rd=document.getElementById('rowdd-'+ac+'-'+m.id);
+    if(rt){rt.textContent=mt.trades>0?fmtUsd(mt.profit):'—';rt.className=mt.profit>=0?'profit-pos':'profit-neg';}
+    if(rd){rd.textContent=mt.maxDD>0?mt.maxDD.toFixed(2)+'%':'—';}
+  });
+
+  // Recap
+  const setR=(id,txt)=>{const e=document.getElementById(id);if(e)e.textContent=txt;};
+  setR('recap-totalProfit-'+ac, fmtUsd(st.totalProfit));
+  setR('recap-totalProfitPct-'+ac, fmtPct(st.totalProfitPct)+' dari capital');
+  setR('recap-maxDD-'+ac, st.maxDD>0?st.maxDD.toFixed(2)+'%':'—');
+  setR('recap-winRate-'+ac, st.totalTrades>0?st.winRate+'%':'—');
+  setR('recap-totalTrades-'+ac, st.totalTrades+' trades direkod');
+  setR('recap-monthReturn-'+ac, fmtUsd(st.monthReturn));
+  setR('recap-monthReturnPct-'+ac, fmtPct(st.monthReturnPct)+' bulan semasa');
+}
+
+function recalcAll(){ACCOUNTS.forEach(ac=>updateDisplay(ac));}
+
+// ─── ACCOUNT SWITCH ───────────────────────────────────────────────────────────
+let curAcct='hr';
+function switchAccount(ac){
+  curAcct=ac;
+  ACCOUNTS.forEach(a=>{
+    document.getElementById('section-'+a).style.display=a===ac?'':'none';
+    const btn=document.getElementById('btn-'+a);
+    btn.className='acct-btn'+(a===ac?' active-'+a:'');
+  });
+}
+
+// ─── SAVE TABLE EDITS ─────────────────────────────────────────────────────────
+document.addEventListener('blur',function(e){
+  const el=e.target;
+  if(!el.hasAttribute('data-editable'))return;
+  const ac=el.getAttribute('data-acct');
+  const month=el.getAttribute('data-month');
+  const row=el.getAttribute('data-row');
+  const field=el.getAttribute('data-field');
+  const val=el.textContent.trim();
+  if(!ac||!month||row===null)return;
+  const ri=parseInt(row);
+  if(!isNaN(ri)&&acctData[ac]?.months[month]?.rows[ri]){
+    acctData[ac].months[month].rows[ri][field]=val;
+    if(field==='profit'){
+      el.className=val&&val!=='—'?(val.startsWith('-')?'profit-neg':'profit-pos'):'';
+      el.setAttribute('data-editable','');
+    }
+    updateDisplay(ac);
+  }
+},true);
+
+// capital editable
+document.addEventListener('blur',function(e){
+  const el=e.target;
+  if(!el.classList.contains('editable'))return;
+  const ac=el.getAttribute('data-acct');
+  const field=el.getAttribute('data-field');
+  if(ac&&field==='capital'){
+    acctData[ac].capital=el.textContent.trim().replace(/[^0-9.]/g,'')||'10000';
+    updateDisplay(ac);
+  }
+},true);
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+initData();
+loadAll();
+ACCOUNTS.forEach(ac=>{
+  buildCards(ac);
+  buildMonthGrid(ac);
+  buildMonthTabs(ac);
+  buildRecap(ac);
+  updateDisplay(ac);
+});
+// sync button names
+document.getElementById('btn-hr').textContent='⚡ '+acctNames.hr;
+document.getElementById('btn-mr').textContent='🔵 '+acctNames.mr;
+</script>
+</body>
+</html>
