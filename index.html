@@ -315,66 +315,6 @@ tbody tr.total-row td{color:var(--text);font-weight:600;}
   <div id="section-hr"></div>
   <div id="section-mr" style="display:none;"></div>
 
-  <!-- ═══════════════════════════════════════════════════════ -->
-  <!-- PROFIT TARGET TRACKER                                   -->
-  <!-- ═══════════════════════════════════════════════════════ -->
-  <div class="pt-section">
-
-    <!-- Settings -->
-    <div class="section-head">Tetapkan Sasaran</div>
-    <div class="pt-card">
-      <div class="pt-input-row">
-        <div class="pt-field"><label>Daily Profit Target</label><input type="number" id="ptDaily" value="200" min="0" step="10" oninput="ptCalc()"></div>
-        <div class="pt-field"><label>Monthly Profit Target</label><input type="number" id="ptMonthly" value="4000" min="0" step="100" oninput="ptCalc()"></div>
-      </div>
-      <div class="pt-input-row">
-        <div class="pt-field"><label>Trading Days / Month</label><input type="number" id="ptDays" value="20" min="1" max="31" oninput="ptRebuild();ptCalc()"></div>
-        <div class="pt-field"><label>Currency</label>
-          <select id="ptCurrency" onchange="ptCalc()">
-            <option value="RM">RM (Ringgit)</option>
-            <option value="USD">USD</option>
-            <option value="SGD">SGD</option>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <!-- Metrics -->
-    <div class="section-head">Ringkasan Bulanan</div>
-    <div class="pt-metrics">
-      <div class="pt-metric"><div class="ml">Total Accumulated</div><div class="mv green" id="ptAccum">RM 0.00</div></div>
-      <div class="pt-metric"><div class="ml">Remaining Target</div><div class="mv red" id="ptRemain">RM 4,000.00</div></div>
-      <div class="pt-metric"><div class="ml">Days Traded</div><div class="mv" id="ptDayCount">0 / 20</div></div>
-    </div>
-    <div class="pt-prog-wrap">
-      <div class="pt-prog-row"><span class="pt-prog-label">Monthly</span><div class="pt-prog-bg"><div class="pt-prog-fill" id="ptProgM" style="width:0%"></div></div><span class="pt-prog-pct" id="ptProgMPct">0%</span></div>
-      <div class="pt-prog-row"><span class="pt-prog-label">Daily Avg</span><div class="pt-prog-bg"><div class="pt-prog-fill" id="ptProgD" style="width:0%"></div></div><span class="pt-prog-pct" id="ptProgDPct">0%</span></div>
-    </div>
-
-    <!-- Day Inputs -->
-    <div class="section-head">Input Profit Harian</div>
-    <div class="pt-card">
-      <div class="pt-day-grid" id="ptDayInputs"></div>
-      <button class="pt-reset-btn" onclick="ptClearAll()">Reset Semua</button>
-    </div>
-
-    <!-- Table -->
-    <div class="section-head">Jadual Profit Target</div>
-    <div class="pt-table-wrap">
-      <table>
-        <thead><tr>
-          <th style="width:10%">Hari</th>
-          <th style="width:22%">Target Harian</th>
-          <th style="width:22%">Profit Aktual</th>
-          <th style="width:22%">Kumulatif</th>
-          <th style="width:24%">Status</th>
-        </tr></thead>
-        <tbody id="ptTableBody"></tbody>
-      </table>
-    </div>
-
-  </div><!-- end pt-section -->
-
   <div class="footer">
     <span>Shameen Robotic — The Resilient © 2025</span>
     <span>Google Sheets sync · Tiada MT5 access diperlukan</span>
@@ -615,8 +555,56 @@ function buildSection(ac){
     <div class="mtabs-nav" id="mtabs-${ac}"></div>
     <div id="mtabsContent-${ac}"></div>
     <div class="section-head" style="margin-top:32px;">Recap</div>
-    <div class="recap-grid" id="recap-${ac}"></div>`;
+    <div class="recap-grid" id="recap-${ac}"></div>
+    <div class="pt-section">
+      <div class="section-head" style="margin-top:32px;">Tetapkan Sasaran</div>
+      <div class="pt-card">
+        <div class="pt-input-row">
+          <div class="pt-field"><label>Daily Profit Target</label><input type="number" id="ptDaily-${ac}" value="200" min="0" step="10" oninput="ptCalc('${ac}')"></div>
+          <div class="pt-field"><label>Monthly Profit Target</label><input type="number" id="ptMonthly-${ac}" value="4000" min="0" step="100" oninput="ptCalc('${ac}')"></div>
+        </div>
+        <div class="pt-input-row">
+          <div class="pt-field"><label>Trading Days / Month</label><input type="number" id="ptDays-${ac}" value="20" min="1" max="31" oninput="ptRebuild('${ac}');ptCalc('${ac}')"></div>
+          <div class="pt-field"><label>Currency</label>
+            <select id="ptCurrency-${ac}" onchange="ptCalc('${ac}')">
+              <option value="RM">RM (Ringgit)</option>
+              <option value="USD">USD</option>
+              <option value="SGD">SGD</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="section-head">Ringkasan Bulanan</div>
+      <div class="pt-metrics">
+        <div class="pt-metric"><div class="ml">Total Accumulated</div><div class="mv" id="ptAccum-${ac}">RM 0.00</div></div>
+        <div class="pt-metric"><div class="ml">Remaining Target</div><div class="mv red" id="ptRemain-${ac}">RM 4,000.00</div></div>
+        <div class="pt-metric"><div class="ml">Days Traded</div><div class="mv" id="ptDayCount-${ac}">0 / 20</div></div>
+      </div>
+      <div class="pt-prog-wrap">
+        <div class="pt-prog-row"><span class="pt-prog-label">Monthly</span><div class="pt-prog-bg"><div class="pt-prog-fill" id="ptProgM-${ac}" style="width:0%"></div></div><span class="pt-prog-pct" id="ptProgMPct-${ac}">0%</span></div>
+        <div class="pt-prog-row"><span class="pt-prog-label">Daily Avg</span><div class="pt-prog-bg"><div class="pt-prog-fill" id="ptProgD-${ac}" style="width:0%"></div></div><span class="pt-prog-pct" id="ptProgDPct-${ac}">0%</span></div>
+      </div>
+      <div class="section-head">Input Profit Harian</div>
+      <div class="pt-card">
+        <div class="pt-day-grid" id="ptDayInputs-${ac}"></div>
+        <button class="pt-reset-btn" onclick="ptClearAll('${ac}')">Reset Semua</button>
+      </div>
+      <div class="section-head">Jadual Profit Target</div>
+      <div class="pt-table-wrap">
+        <table>
+          <thead><tr>
+            <th style="width:10%">Hari</th>
+            <th style="width:22%">Target Harian</th>
+            <th style="width:22%">Profit Aktual</th>
+            <th style="width:22%">Kumulatif</th>
+            <th style="width:24%">Status</th>
+          </tr></thead>
+          <tbody id="ptTableBody-${ac}"></tbody>
+        </table>
+      </div>
+    </div>`;
   buildCards(ac);buildMonthGrid(ac);buildMonthTabs(ac);buildRecap(ac);
+  ptRebuild(ac);ptCalc(ac);
 }
 
 function buildCards(ac){
@@ -796,76 +784,77 @@ if(SCRIPT_URL){
 }
 ACCOUNTS.forEach(ac=>document.getElementById('btn-'+ac).textContent=(ac==='hr'?'⚡ ':'🔵 ')+acctNames[ac]);
 
-// ─── PROFIT TRACKER ───────────────────────────────────────────────────────────
-var ptProfits={};
+// ─── PROFIT TRACKER (per account) ────────────────────────────────────────────
+var ptProfits={hr:{},mr:{}};
 var ptToday=new Date().getDate();
-function ptCur(){return document.getElementById('ptCurrency').value;}
-function ptFmt(n){return ptCur()+' '+Number(n).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});}
-function ptRebuild(){
-  var days=parseInt(document.getElementById('ptDays').value)||20;
-  var wrap=document.getElementById('ptDayInputs');
+function ptCur(ac){return document.getElementById('ptCurrency-'+ac).value;}
+function ptFmt(ac,n){return ptCur(ac)+' '+Number(n).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function ptRebuild(ac){
+  var days=parseInt(document.getElementById('ptDays-'+ac).value)||20;
+  var wrap=document.getElementById('ptDayInputs-'+ac);
+  if(!wrap)return;
   wrap.innerHTML='';
   for(var i=1;i<=days;i++){
     var d=document.createElement('div');
     d.className='pt-day-wrap';
-    var val=ptProfits[i]!==undefined?ptProfits[i]:'';
-    d.innerHTML='<label>D'+i+'</label><input type="number" min="0" step="1" placeholder="0" data-ptday="'+i+'" value="'+val+'" oninput="ptOnInput(this)">';
+    var val=ptProfits[ac][i]!==undefined?ptProfits[ac][i]:'';
+    d.innerHTML='<label>D'+i+'</label><input type="number" min="0" step="1" placeholder="0" data-ptday="'+i+'" data-ptacct="'+ac+'" value="'+val+'" oninput="ptOnInput(this)">';
     wrap.appendChild(d);
   }
-  ptColorInputs();
+  ptColorInputs(ac);
 }
-function ptColorInputs(){
-  document.querySelectorAll('[data-ptday]').forEach(function(el){
+function ptColorInputs(ac){
+  document.querySelectorAll('[data-ptacct="'+ac+'"]').forEach(function(el){
     el.classList.toggle('has-val',el.value!=='');
   });
 }
 function ptOnInput(el){
+  var ac=el.getAttribute('data-ptacct');
   var day=parseInt(el.getAttribute('data-ptday'));
   var val=parseFloat(el.value);
-  if(isNaN(val)||val<0){delete ptProfits[day];}else{ptProfits[day]=val;}
-  ptColorInputs();
-  ptCalc();
+  if(isNaN(val)||val<0){delete ptProfits[ac][day];}else{ptProfits[ac][day]=val;}
+  ptColorInputs(ac);
+  ptCalc(ac);
 }
-function ptCalc(){
-  var dailyT=parseFloat(document.getElementById('ptDaily').value)||0;
-  var monthlyT=parseFloat(document.getElementById('ptMonthly').value)||0;
-  var days=parseInt(document.getElementById('ptDays').value)||20;
-  var tbody=document.getElementById('ptTableBody');
+function ptCalc(ac){
+  var dailyT=parseFloat(document.getElementById('ptDaily-'+ac).value)||0;
+  var monthlyT=parseFloat(document.getElementById('ptMonthly-'+ac).value)||0;
+  var days=parseInt(document.getElementById('ptDays-'+ac).value)||20;
+  var tbody=document.getElementById('ptTableBody-'+ac);
+  if(!tbody)return;
   tbody.innerHTML='';
   var cumulative=0,daysTraded=0,dailySum=0;
   for(var i=1;i<=days;i++){
-    var actual=ptProfits[i]!==undefined?ptProfits[i]:null;
+    var actual=ptProfits[ac][i]!==undefined?ptProfits[ac][i]:null;
     if(actual!==null){cumulative+=actual;daysTraded++;dailySum+=actual;}
     var status=actual!==null?(actual>=dailyT?'hit':'miss'):'pending';
     var tr=document.createElement('tr');
     if(i===ptToday&&i<=days)tr.className='pt-today';
-    var aCell=actual!==null?'<span style="font-weight:600;color:'+(actual>=dailyT?'var(--green)':'var(--red)')+'">'+ptFmt(actual)+'</span>':'<span style="color:var(--text3)">—</span>';
+    var aCell=actual!==null?'<span style="font-weight:600;color:'+(actual>=dailyT?'var(--green)':'var(--red)')+'">'+ptFmt(ac,actual)+'</span>':'<span style="color:var(--text3)">—</span>';
     var pillCls=status==='hit'?'pt-pill-hit':status==='miss'?'pt-pill-miss':'pt-pill-pending';
     var pillTxt=status==='hit'?'Tercapai':status==='miss'?'Tidak Cukup':'Belum';
-    tr.innerHTML='<td style="font-weight:600;color:var(--text)">'+i+'</td><td>'+ptFmt(dailyT)+'</td><td>'+aCell+'</td><td>'+ptFmt(cumulative)+'</td><td><span class="pt-pill '+pillCls+'">'+pillTxt+'</span></td>';
+    tr.innerHTML='<td style="font-weight:600;color:var(--text)">'+i+'</td><td>'+ptFmt(ac,dailyT)+'</td><td>'+aCell+'</td><td>'+ptFmt(ac,cumulative)+'</td><td><span class="pt-pill '+pillCls+'">'+pillTxt+'</span></td>';
     tbody.appendChild(tr);
   }
   var remaining=Math.max(0,monthlyT-cumulative);
   var avgDaily=daysTraded>0?dailySum/daysTraded:0;
   var monPct=monthlyT>0?Math.min(100,Math.round((cumulative/monthlyT)*100)):0;
   var dayPct=dailyT>0?Math.min(100,Math.round((avgDaily/dailyT)*100)):0;
-  document.getElementById('ptAccum').textContent=ptFmt(cumulative);
-  document.getElementById('ptAccum').className='mv '+(cumulative>0?'green':'');
-  document.getElementById('ptRemain').textContent=ptFmt(remaining);
-  document.getElementById('ptRemain').className='mv '+(remaining===0?'green':'red');
-  document.getElementById('ptDayCount').textContent=daysTraded+' / '+days;
-  document.getElementById('ptProgM').style.width=monPct+'%';
-  document.getElementById('ptProgMPct').textContent=monPct+'%';
-  document.getElementById('ptProgD').style.width=dayPct+'%';
-  document.getElementById('ptProgDPct').textContent=dayPct+'%';
+  document.getElementById('ptAccum-'+ac).textContent=ptFmt(ac,cumulative);
+  document.getElementById('ptAccum-'+ac).className='mv '+(cumulative>0?'green':'');
+  document.getElementById('ptRemain-'+ac).textContent=ptFmt(ac,remaining);
+  document.getElementById('ptRemain-'+ac).className='mv '+(remaining===0?'green':'red');
+  document.getElementById('ptDayCount-'+ac).textContent=daysTraded+' / '+days;
+  document.getElementById('ptProgM-'+ac).style.width=monPct+'%';
+  document.getElementById('ptProgMPct-'+ac).textContent=monPct+'%';
+  document.getElementById('ptProgD-'+ac).style.width=dayPct+'%';
+  document.getElementById('ptProgDPct-'+ac).textContent=dayPct+'%';
 }
-function ptClearAll(){
-  ptProfits={};
-  document.querySelectorAll('[data-ptday]').forEach(function(el){el.value='';el.classList.remove('has-val');});
-  ptCalc();
+function ptClearAll(ac){
+  ptProfits[ac]={};
+  document.querySelectorAll('[data-ptacct="'+ac+'"]').forEach(function(el){el.value='';el.classList.remove('has-val');});
+  ptCalc(ac);
 }
-ptRebuild();
-ptCalc();
 </script>
 </body>
 </html>
