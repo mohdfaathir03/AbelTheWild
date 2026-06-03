@@ -324,7 +324,7 @@ tbody tr.total-row td{color:var(--text);font-weight:600;}
 <script>
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 const CORRECT_PIN='1109';
-let SCRIPT_URL='https://script.google.com/macros/s/AKfycbzYm1E4TRO-RVRnXpdU2DmkYo9QOILi9nkxAmjSlM8alhhjokBFRv4kq3Pe8OtTYn-4Ow/exec';
+let SCRIPT_URL='https://script.google.com/macros/s/AKfycbydc2BttwagbC0u6ob0o2iFCp3EWRtUnNhryENo90jyuVXMKHLXMZ1T1uKhymDZjCNeHw/exec';
 localStorage.setItem('abel_scriptUrl', SCRIPT_URL);
 let pinInput='',isAdmin=false,editMode=false,curAcct='hr';
 const ACCOUNTS=['hr','mr'];
@@ -385,7 +385,7 @@ async function loadFromSheets(){
   if(!SCRIPT_URL){setSyncStatus('','Tiada URL — sila setup');return;}
   setSyncStatus('saving','Memuatkan data...');
   try{
-    const res=await fetch(SCRIPT_URL+'?action=get');
+    const res=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'getAll'})});
     const json=await res.json();
     if(!json.ok)throw new Error(json.error);
     const d=json.data;
@@ -414,6 +414,10 @@ async function loadFromSheets(){
     if(d['acct_names']){try{const n=JSON.parse(d['acct_names']);Object.assign(acctNames,n);}catch(e){}}
     // Load last update
     if(d['lastUpdate'])document.getElementById('lastUpdate').textContent=d['lastUpdate'];
+    // Load PT data
+    ACCOUNTS.forEach(ac=>{
+      if(d['pt_'+ac]){try{const p=JSON.parse(d['pt_'+ac]);Object.assign(ptData[ac],p);}catch(e){}}
+    });
     rebuildAll();
     setSyncStatus('ok','Sync berjaya · '+new Date().toLocaleTimeString('ms-MY'));
   }catch(err){
@@ -431,6 +435,8 @@ async function saveToSheets(){
     ACCOUNTS.forEach(ac=>{payload['acct_'+ac]=JSON.stringify(acctData[ac]);});
     payload['acct_names']=JSON.stringify(acctNames);
     payload['lastUpdate']=document.getElementById('lastUpdate').textContent;
+    // PT data
+    ACCOUNTS.forEach(ac=>{payload['pt_'+ac]=JSON.stringify(ptData[ac]);});
     const res=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveAll',payload})});
     const json=await res.json();
     if(!json.ok)throw new Error(json.error);
@@ -446,16 +452,26 @@ function saveToLocal(){
   ACCOUNTS.forEach(ac=>localStorage.setItem('abel_'+ac,JSON.stringify(acctData[ac])));
   localStorage.setItem('abel_names',JSON.stringify(acctNames));
   localStorage.setItem('abel_lastUpdate',document.getElementById('lastUpdate').textContent);
+  // PT backup
+  ACCOUNTS.forEach(ac=>localStorage.setItem('abel_pt_'+ac,JSON.stringify(ptData[ac])));
 }
 function loadFromLocal(){
   ACCOUNTS.forEach(ac=>{
     const d=localStorage.getItem('abel_'+ac);
     if(d){try{const p=JSON.parse(d);if(p.capital)acctData[ac].capital=p.capital;if(p.months){MONTHS.forEach(m=>{if(p.months[m.id]?.rows)p.months[m.id].rows.forEach((r,i)=>{if(acctData[ac].months[m.id]?.rows[i])Object.assign(acctData[ac].months[m.id].rows[i],r);});});}}catch(e){}}
+    // PT local
+    const pt=localStorage.getItem('abel_pt_'+ac);
+    if(pt){try{Object.assign(ptData[ac],JSON.parse(pt));}catch(e){}}
   });
   const n=localStorage.getItem('abel_names');
   if(n){try{Object.assign(acctNames,JSON.parse(n));}catch(e){}}
   const lu=localStorage.getItem('abel_lastUpdate');
   if(lu)document.getElementById('lastUpdate').textContent=lu;
+  // PT local fallback
+  ACCOUNTS.forEach(ac=>{
+    const pt=localStorage.getItem('abel_pt_'+ac);
+    if(pt){try{const p=JSON.parse(pt);if(p.profits)ptData[ac].profits=p.profits;if(p.daily)ptData[ac].daily=p.daily;if(p.monthly)ptData[ac].monthly=p.monthly;if(p.days)ptData[ac].days=p.days;if(p.currency)ptData[ac].currency=p.currency;}catch(e){}}
+  });
   rebuildAll();
 }
 
@@ -806,8 +822,18 @@ function ptRebuild(ac){
     d.className='pt-day-wrap';
     var val=ptData[ac].profits[i]!==undefined?ptData[ac].profits[i]:'';
     d.innerHTML='<label>D'+i+'</label><input type="number" min="0" step="1" placeholder="0" data-ptday="'+i+'" data-ptacct="'+ac+'" value="'+val+'" oninput="ptOnInput(this)">';
+    if(val!=='')d.querySelector('input').classList.add('has-val');
     wrap.appendChild(d);
   }
+  // restore settings fields
+  var dEl=document.getElementById('ptDaily-'+ac);
+  var mEl=document.getElementById('ptMonthly-'+ac);
+  var dyEl=document.getElementById('ptDays-'+ac);
+  var cEl=document.getElementById('ptCurrency-'+ac);
+  if(dEl)dEl.value=ptData[ac].daily;
+  if(mEl)mEl.value=ptData[ac].monthly;
+  if(dyEl)dyEl.value=ptData[ac].days;
+  if(cEl)cEl.value=ptData[ac].currency;
 }
 
 function ptOnInput(el){
@@ -818,6 +844,9 @@ function ptOnInput(el){
   else{ptData[ac].profits[day]=val;}
   el.classList.toggle('has-val',el.value!=='');
   ptCalc(ac);
+  // auto-save
+  clearTimeout(ptData._saveTimer);
+  ptData._saveTimer=setTimeout(function(){saveToSheets();},1500);
 }
 
 function ptSyncSettings(ac){
@@ -832,6 +861,9 @@ function ptSyncSettings(ac){
     if(newDays!==ptData[ac].days){ptData[ac].days=newDays;ptRebuild(ac);}
   }
   if(cEl) ptData[ac].currency=cEl.value;
+  // auto-save settings
+  clearTimeout(ptData._saveTimer);
+  ptData._saveTimer=setTimeout(function(){saveToSheets();},1500);
 }
 
 function ptCalc(ac){
