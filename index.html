@@ -216,6 +216,11 @@ tbody tr.total-row td{color:var(--text);font-weight:600;}
 .acct-btn.active-combined{background:var(--gold-dim);color:var(--gold);border:1px solid rgba(245,166,35,0.3);}
 tr.month-subtotal-row{background:var(--bg3);border-top:1px solid var(--border2);}
 tr.month-subtotal-row td{color:var(--text);font-weight:600;}
+.rm-sub{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:2px;}
+.rate-box{display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:20px;width:fit-content;font-size:12px;color:var(--text3);}
+.rate-box label{font-family:'Syne',sans-serif;font-weight:600;letter-spacing:0.04em;}
+.rate-input{width:70px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--gold);font-family:'DM Mono',monospace;font-size:13px;font-weight:600;padding:5px 8px;outline:none;text-align:center;}
+.rate-input:focus{border-color:rgba(245,166,35,0.4);}
 
 /* FOOTER */
 .footer{margin-top:48px;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;border-top:1px solid var(--border);padding-top:20px;flex-wrap:wrap;gap:8px;}
@@ -330,6 +335,7 @@ const ACCOUNTS=['hr','mr'];
 const acctNames={hr:'High Risk',mr:'Medium Risk'};
 const acctData={};
 const withdrawData={}; // keyed by monthId -> { weekNum -> usdAmount }
+let rmRate=4.0;
 
 // ─── MONTHS ───────────────────────────────────────────────────────────────────
 const MONTHS=[
@@ -410,6 +416,7 @@ async function loadFromSheets(){
     });
     if(d['acct_names']){try{const n=JSON.parse(d['acct_names']);Object.assign(acctNames,n);}catch(e){}}
     if(d['withdraw_data']){try{Object.assign(withdrawData,JSON.parse(d['withdraw_data']));}catch(e){}}
+    if(d['rm_rate']){const rv=parseFloat(d['rm_rate']);if(!isNaN(rv)&&rv>0)rmRate=rv;}
     if(d['lastUpdate'])document.getElementById('lastUpdate').textContent=d['lastUpdate'];
     rebuildAll();
     setSyncStatus('ok','Synced · '+new Date().toLocaleTimeString('en-MY'));
@@ -427,6 +434,7 @@ async function saveToSheets(){
     ACCOUNTS.forEach(ac=>{payload['acct_'+ac]=JSON.stringify(acctData[ac]);});
     payload['acct_names']=JSON.stringify(acctNames);
     payload['withdraw_data']=JSON.stringify(withdrawData);
+    payload['rm_rate']=String(rmRate);
     payload['lastUpdate']=document.getElementById('lastUpdate').textContent;
     const res=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveAll',payload})});
     const json=await res.json();
@@ -443,6 +451,7 @@ function saveToLocal(){
   ACCOUNTS.forEach(ac=>localStorage.setItem('abel_'+ac,JSON.stringify(acctData[ac])));
   localStorage.setItem('abel_names',JSON.stringify(acctNames));
   localStorage.setItem('abel_withdraw',JSON.stringify(withdrawData));
+  localStorage.setItem('abel_rmrate',String(rmRate));
   localStorage.setItem('abel_lastUpdate',document.getElementById('lastUpdate').textContent);
 }
 function loadFromLocal(){
@@ -454,6 +463,8 @@ function loadFromLocal(){
   if(n){try{Object.assign(acctNames,JSON.parse(n));}catch(e){}}
   const wd=localStorage.getItem('abel_withdraw');
   if(wd){try{Object.assign(withdrawData,JSON.parse(wd));}catch(e){}}
+  const rr=localStorage.getItem('abel_rmrate');
+  if(rr){const rv=parseFloat(rr);if(!isNaN(rv)&&rv>0)rmRate=rv;}
   const lu=localStorage.getItem('abel_lastUpdate');
   if(lu)document.getElementById('lastUpdate').textContent=lu;
   rebuildAll();
@@ -676,6 +687,10 @@ function buildSection(ac){
 function buildCombinedSection(){
   const sec=document.getElementById('section-combined');
   sec.innerHTML=`
+    <div class="rate-box">
+      <label>USD → RM rate</label>
+      <input type="number" class="rate-input" id="rmRateInput" min="0.01" step="0.01" value="${rmRate}" oninput="onRmRateInput(this)">
+    </div>
     <div class="wk-summary-cards" id="combinedSummary" style="margin-bottom:24px;"></div>
     <div class="section-head">Combined Weekly & Monthly PnL <span class="recap-auto-badge" style="margin-left:6px;">HR + MR</span></div>
     <div class="wk-table-wrap">
@@ -696,16 +711,19 @@ function buildCards(ac){
   document.getElementById('cards-'+ac).innerHTML=`
     <div class="scard gold"><div class="scard-label">Total Capital</div>
       <div class="scard-val gold">$<span class="editable" data-acct="${ac}" data-field="capital" contenteditable="false">${acctData[ac].capital}</span></div>
-      <div class="scard-sub">Active capital</div></div>
+      <div class="scard-sub">Active capital</div>
+      <div class="rm-sub" id="capitalRM-${ac}"></div></div>
     <div class="scard green"><div class="scard-label">Total Profit</div>
       <div class="scard-val green" id="totalProfit-${ac}">—</div>
-      <div class="scard-sub" id="totalProfitPct-${ac}">—</div><div class="scard-auto">auto</div></div>
+      <div class="scard-sub" id="totalProfitPct-${ac}">—</div><div class="scard-auto">auto</div>
+      <div class="rm-sub" id="totalProfitRM-${ac}"></div></div>
     <div class="scard red"><div class="scard-label">Max Drawdown</div>
       <div class="scard-val red" id="maxDD-${ac}">—</div>
       <div class="scard-sub">Highest on record</div><div class="scard-auto">auto</div></div>
     <div class="scard amber"><div class="scard-label">Monthly Return</div>
       <div class="scard-val amber" id="monthReturn-${ac}">—</div>
-      <div class="scard-sub" id="monthReturnPct-${ac}">—</div><div class="scard-auto">auto · current month</div></div>
+      <div class="scard-sub" id="monthReturnPct-${ac}">—</div><div class="scard-auto">auto · current month</div>
+      <div class="rm-sub" id="monthReturnRM-${ac}"></div></div>
     <div class="scard purple"><div class="scard-label">Win Rate</div>
       <div class="scard-val purple" id="winRate-${ac}">—</div>
       <div class="scard-sub" id="totalTrades-${ac}">—</div><div class="scard-auto">auto</div></div>`;
@@ -719,7 +737,8 @@ function buildMonthGrid(ac){
     c.id='mc-'+ac+'-'+m.id;c.onclick=()=>switchMonthTab(ac,m.id);
     c.innerHTML=`<div class="mcard-month">${m.short}</div>
       <div class="mcard-usd pos" id="mcusd-${ac}-${m.id}">—</div>
-      <div class="mcard-pct pos" id="mcpct-${ac}-${m.id}">—</div>`;
+      <div class="mcard-pct pos" id="mcpct-${ac}-${m.id}">—</div>
+      <div class="rm-sub" id="mcrm-${ac}-${m.id}" style="margin-top:2px;"></div>`;
     g.appendChild(c);
   });
 }
@@ -761,13 +780,15 @@ function buildTable(ac,m){
 function buildRecap(ac){
   document.getElementById('recap-'+ac).innerHTML=`
     <div class="recap-card"><div class="recap-label">Total Profit <span class="recap-auto-badge">auto</span></div>
-      <div class="recap-val green" id="recap-tp-${ac}">—</div><div class="recap-sub" id="recap-tpp-${ac}">—</div></div>
+      <div class="recap-val green" id="recap-tp-${ac}">—</div><div class="recap-sub" id="recap-tpp-${ac}">—</div>
+      <div class="rm-sub" id="recap-tprm-${ac}"></div></div>
     <div class="recap-card"><div class="recap-label">Max Drawdown <span class="recap-auto-badge">auto</span></div>
       <div class="recap-val red" id="recap-dd-${ac}">—</div><div class="recap-sub">Highest recorded period</div></div>
     <div class="recap-card"><div class="recap-label">Win Rate <span class="recap-auto-badge">auto</span></div>
       <div class="recap-val purple" id="recap-wr-${ac}">—</div><div class="recap-sub" id="recap-tt-${ac}">—</div></div>
     <div class="recap-card"><div class="recap-label">Monthly Return <span class="recap-auto-badge">auto</span></div>
-      <div class="recap-val gold" id="recap-mr-${ac}">—</div><div class="recap-sub" id="recap-mrp-${ac}">—</div></div>`;
+      <div class="recap-val gold" id="recap-mr-${ac}">—</div><div class="recap-sub" id="recap-mrp-${ac}">—</div>
+      <div class="rm-sub" id="recap-mrrm-${ac}"></div></div>`;
 }
 
 function buildWeeklyPnl(ac){
@@ -795,9 +816,9 @@ function buildWeeklyPnl(ac){
   const greenWks=flatWeeks.filter(w=>w.profit>0).length;
   const maxAbs=Math.max(...flatWeeks.map(w=>Math.abs(w.profit)),0.01);
   summaryEl.innerHTML=`
-    <div class="wk-scard"><div class="wk-scard-label">Total Weekly PnL</div><div class="wk-scard-val ${totalWkPnl>=0?'green':'red'}">${totalWkPnl>=0?'+$':'-$'}${Math.abs(totalWkPnl).toFixed(2)}</div></div>
-    <div class="wk-scard"><div class="wk-scard-label">Best Week</div><div class="wk-scard-val green">+$${bestWk.profit.toFixed(2)}</div></div>
-    <div class="wk-scard"><div class="wk-scard-label">Worst Week</div><div class="wk-scard-val red">${worstWk.profit>=0?'+$':'-$'}${Math.abs(worstWk.profit).toFixed(2)}</div></div>
+    <div class="wk-scard"><div class="wk-scard-label">Total Weekly PnL</div><div class="wk-scard-val ${totalWkPnl>=0?'green':'red'}">${totalWkPnl>=0?'+$':'-$'}${Math.abs(totalWkPnl).toFixed(2)}</div><div class="rm-sub">${fmtRMSigned(totalWkPnl)}</div></div>
+    <div class="wk-scard"><div class="wk-scard-label">Best Week</div><div class="wk-scard-val green">+$${bestWk.profit.toFixed(2)}</div><div class="rm-sub">${fmtRMSigned(bestWk.profit)}</div></div>
+    <div class="wk-scard"><div class="wk-scard-label">Worst Week</div><div class="wk-scard-val red">${worstWk.profit>=0?'+$':'-$'}${Math.abs(worstWk.profit).toFixed(2)}</div><div class="rm-sub">${fmtRMSigned(worstWk.profit)}</div></div>
     <div class="wk-scard"><div class="wk-scard-label">Green Weeks</div><div class="wk-scard-val gold">${greenWks} / ${flatWeeks.length}</div></div>`;
   monthsData.forEach(md=>{
     // month header row
@@ -849,8 +870,8 @@ function updateCombinedDisplay(){
   const moPnl=curMonth?curMonth.monthPnl:0;
   const moWithdraw=curMonth?curMonth.monthWithdraw:0;
   summaryEl.innerHTML=`
-    <div class="wk-scard"><div class="wk-scard-label">Monthly Total PnL</div><div class="wk-scard-val ${moPnl>=0?'green':'red'}">${moPnl>=0?'+$':'-$'}${Math.abs(moPnl).toFixed(2)}</div></div>
-    <div class="wk-scard"><div class="wk-scard-label">Monthly Withdraw</div><div class="wk-scard-val gold">$${moWithdraw.toFixed(2)}</div></div>`;
+    <div class="wk-scard"><div class="wk-scard-label">Monthly Total PnL</div><div class="wk-scard-val ${moPnl>=0?'green':'red'}">${moPnl>=0?'+$':'-$'}${Math.abs(moPnl).toFixed(2)}</div><div class="rm-sub">${fmtRMSigned(moPnl)}</div></div>
+    <div class="wk-scard"><div class="wk-scard-label">Monthly Withdraw</div><div class="wk-scard-val gold">$${moWithdraw.toFixed(2)}</div><div class="rm-sub">${fmtRM(moWithdraw)}</div></div>`;
   // table — only render months that have either PnL data or withdraw data, to avoid 12 empty months cluttering
   const visibleMonths=monthsData.filter(md=>md.weeks.some(w=>w.hasData)||md.monthWithdraw>0);
   tbody.innerHTML='';
@@ -873,11 +894,18 @@ function updateCombinedDisplay(){
       const tr=document.createElement('tr');
       tr.innerHTML=`
         <td style="color:var(--text);font-size:12px;font-family:'DM Mono',monospace;padding-left:24px;">Week ${w.weekNum}</td>
-        <td style="text-align:right;font-weight:600;font-family:'DM Mono',monospace;color:${w.hasData?(isPos?'var(--green)':'var(--red)'):'var(--text3)'}">${w.hasData?(isPos?'+$':'-$')+Math.abs(w.profit).toFixed(2):'—'}</td>
+        <td style="text-align:right;">
+          <div style="font-weight:600;font-family:'DM Mono',monospace;color:${w.hasData?(isPos?'var(--green)':'var(--red)'):'var(--text3)'}">${w.hasData?(isPos?'+$':'-$')+Math.abs(w.profit).toFixed(2):'—'}</div>
+          ${w.hasData?'<div class="rm-sub">'+fmtRMSigned(w.profit)+'</div>':''}
+        </td>
         <td style="text-align:right;">
           <input type="number" class="wd-input" min="0" step="0.01" placeholder="0" value="${wdVal}" data-month="${md.monthId}" data-week="${w.weekNum}" oninput="onWithdrawInput(this)">
+          ${w.withdraw>0?'<div class="rm-sub" style="text-align:right;">'+fmtRM(w.withdraw)+'</div>':''}
         </td>
-        <td style="text-align:right;font-weight:600;font-family:'DM Mono',monospace;color:${netPos?'var(--green)':'var(--red)'}">${netPos?'+$':'-$'}${Math.abs(net).toFixed(2)}</td>
+        <td style="text-align:right;">
+          <div style="font-weight:600;font-family:'DM Mono',monospace;color:${netPos?'var(--green)':'var(--red)'}">${netPos?'+$':'-$'}${Math.abs(net).toFixed(2)}</div>
+          <div class="rm-sub">${fmtRMSigned(net)}</div>
+        </td>
         <td style="text-align:right;padding-right:16px;">
           <div style="display:flex;align-items:center;gap:8px;justify-content:flex-end;">
             <div style="width:90px;height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;">
@@ -893,9 +921,18 @@ function updateCombinedDisplay(){
     subt.className='month-subtotal-row';
     subt.innerHTML=`
       <td style="font-size:10px;letter-spacing:0.1em;color:var(--text3);padding-left:24px;">TOTAL ${md.monthShort.toUpperCase()}</td>
-      <td style="text-align:right;color:${md.monthPnl>=0?'var(--green)':'var(--red)'}">${md.monthPnl>=0?'+$':'-$'}${Math.abs(md.monthPnl).toFixed(2)}</td>
-      <td style="text-align:right;color:var(--gold);">$${md.monthWithdraw.toFixed(2)}</td>
-      <td style="text-align:right;color:${md.monthNet>=0?'var(--green)':'var(--red)'}">${md.monthNet>=0?'+$':'-$'}${Math.abs(md.monthNet).toFixed(2)}</td>
+      <td style="text-align:right;">
+        <div style="color:${md.monthPnl>=0?'var(--green)':'var(--red)'}">${md.monthPnl>=0?'+$':'-$'}${Math.abs(md.monthPnl).toFixed(2)}</div>
+        <div class="rm-sub">${fmtRMSigned(md.monthPnl)}</div>
+      </td>
+      <td style="text-align:right;">
+        <div style="color:var(--gold);">$${md.monthWithdraw.toFixed(2)}</div>
+        ${md.monthWithdraw>0?'<div class="rm-sub" style="text-align:right;">'+fmtRM(md.monthWithdraw)+'</div>':''}
+      </td>
+      <td style="text-align:right;">
+        <div style="color:${md.monthNet>=0?'var(--green)':'var(--red)'}">${md.monthNet>=0?'+$':'-$'}${Math.abs(md.monthNet).toFixed(2)}</div>
+        <div class="rm-sub">${fmtRMSigned(md.monthNet)}</div>
+      </td>
       <td></td>`;
     tbody.appendChild(subt);
   });
@@ -916,23 +953,46 @@ function fmt2(n){return isNaN(n)?'—':n.toFixed(2);}
 function fmtU(n){if(isNaN(n))return'—';return(n>=0?'+$':'-$')+Math.abs(n).toFixed(2);}
 function fmtP(n){if(isNaN(n))return'—';return(n>=0?'+':'')+n.toFixed(2)+'%';}
 function col(n){return isNaN(n)?'pos':(n>=0?'pos':'neg');}
+function fmtRM(usd){
+  if(isNaN(usd))return'';
+  const rm=usd*rmRate;
+  return 'RM '+rm.toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function fmtRMSigned(usd){
+  if(isNaN(usd))return'';
+  const rm=usd*rmRate;
+  return(rm>=0?'+RM ':'-RM ')+Math.abs(rm).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function onRmRateInput(el){
+  const v=parseFloat(el.value);
+  rmRate=(!isNaN(v)&&v>0)?v:4.0;
+  recalcAll();
+  updateCombinedDisplay();
+  clearTimeout(window._rateSaveTimer);
+  window._rateSaveTimer=setTimeout(function(){saveToSheets();},1000);
+}
 function setEl(id,txt){const e=document.getElementById(id);if(e)e.textContent=txt;}
 
 function updateDisplay(ac){
   const st=calcAccount(ac);
   setEl('totalProfit-'+ac,fmtU(st.totalProfit));
   setEl('totalProfitPct-'+ac,fmtP(st.totalProfitPct)+' from capital');
+  setEl('totalProfitRM-'+ac,fmtRMSigned(st.totalProfit));
   setEl('maxDD-'+ac,st.maxDD>0?fmt2(st.maxDD)+'%':'—');
   setEl('monthReturn-'+ac,fmtU(st.monthReturn));
   setEl('monthReturnPct-'+ac,fmtP(st.monthReturnPct)+' this month');
+  setEl('monthReturnRM-'+ac,fmtRMSigned(st.monthReturn));
   setEl('winRate-'+ac,st.totalTrades>0?st.winRate+'%':'—');
   setEl('totalTrades-'+ac,st.totalTrades+' trades recorded');
+  setEl('capitalRM-'+ac,fmtRM(st.capital));
   MONTHS.forEach(m=>{
     const mt=st.monthTotals[m.id];
     const ue=document.getElementById('mcusd-'+ac+'-'+m.id);
     const pe=document.getElementById('mcpct-'+ac+'-'+m.id);
+    const re=document.getElementById('mcrm-'+ac+'-'+m.id);
     if(ue){ue.textContent=mt.trades>0?fmtU(mt.profit):'—';ue.className='mcard-usd '+col(mt.profit);}
     if(pe){pe.textContent=mt.trades>0?fmtP(mt.pct):'—';pe.className='mcard-pct '+col(mt.pct);}
+    if(re)re.textContent=mt.trades>0?fmtRMSigned(mt.profit):'';
     const rt=document.getElementById('rowtotal-'+ac+'-'+m.id);
     const rd=document.getElementById('rowdd-'+ac+'-'+m.id);
     if(rt){rt.textContent=mt.trades>0?fmtU(mt.profit):'—';rt.className=mt.profit>=0?'profit-pos':'profit-neg';}
@@ -940,11 +1000,13 @@ function updateDisplay(ac){
   });
   setEl('recap-tp-'+ac,fmtU(st.totalProfit));
   setEl('recap-tpp-'+ac,fmtP(st.totalProfitPct)+' from capital');
+  setEl('recap-tprm-'+ac,fmtRMSigned(st.totalProfit));
   setEl('recap-dd-'+ac,st.maxDD>0?fmt2(st.maxDD)+'%':'—');
   setEl('recap-wr-'+ac,st.totalTrades>0?st.winRate+'%':'—');
   setEl('recap-tt-'+ac,st.totalTrades+' trades recorded');
   setEl('recap-mr-'+ac,fmtU(st.monthReturn));
   setEl('recap-mrp-'+ac,fmtP(st.monthReturnPct)+' current month');
+  setEl('recap-mrrm-'+ac,fmtRMSigned(st.monthReturn));
   buildWeeklyPnl(ac);
 }
 function recalcAll(){ACCOUNTS.forEach(ac=>updateDisplay(ac));}
