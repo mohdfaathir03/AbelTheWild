@@ -844,17 +844,11 @@ function updateCombinedDisplay(){
   if(!tbody||!summaryEl)return;
   const monthsData=calcCombinedWeeklyPnl();
   const curMonthId=getCurrentMonthId();
-  const curWeekNum=getCurrentWeekNum();
   // current-period summary
   const curMonth=monthsData.find(md=>md.monthId===curMonthId);
-  const curWeek=curMonth?curMonth.weeks.find(w=>w.weekNum===curWeekNum):null;
-  const wkPnl=curWeek?curWeek.profit:0;
-  const wkWithdraw=curWeek?curWeek.withdraw:0;
   const moPnl=curMonth?curMonth.monthPnl:0;
   const moWithdraw=curMonth?curMonth.monthWithdraw:0;
   summaryEl.innerHTML=`
-    <div class="wk-scard"><div class="wk-scard-label">Weekly Total PnL</div><div class="wk-scard-val ${wkPnl>=0?'green':'red'}">${wkPnl>=0?'+$':'-$'}${Math.abs(wkPnl).toFixed(2)}</div></div>
-    <div class="wk-scard"><div class="wk-scard-label">Weekly Withdraw</div><div class="wk-scard-val gold">$${wkWithdraw.toFixed(2)}</div></div>
     <div class="wk-scard"><div class="wk-scard-label">Monthly Total PnL</div><div class="wk-scard-val ${moPnl>=0?'green':'red'}">${moPnl>=0?'+$':'-$'}${Math.abs(moPnl).toFixed(2)}</div></div>
     <div class="wk-scard"><div class="wk-scard-label">Monthly Withdraw</div><div class="wk-scard-val gold">$${moWithdraw.toFixed(2)}</div></div>`;
   // table — only render months that have either PnL data or withdraw data, to avoid 12 empty months cluttering
@@ -881,7 +875,7 @@ function updateCombinedDisplay(){
         <td style="color:var(--text);font-size:12px;font-family:'DM Mono',monospace;padding-left:24px;">Week ${w.weekNum}</td>
         <td style="text-align:right;font-weight:600;font-family:'DM Mono',monospace;color:${w.hasData?(isPos?'var(--green)':'var(--red)'):'var(--text3)'}">${w.hasData?(isPos?'+$':'-$')+Math.abs(w.profit).toFixed(2):'—'}</td>
         <td style="text-align:right;">
-          <input type="number" class="wd-input" min="0" step="1" placeholder="0" value="${wdVal}" data-month="${md.monthId}" data-week="${w.weekNum}" oninput="onWithdrawInput(this)">
+          <input type="number" class="wd-input" min="0" step="0.01" placeholder="0" value="${wdVal}" data-month="${md.monthId}" data-week="${w.weekNum}" oninput="onWithdrawInput(this)">
         </td>
         <td style="text-align:right;font-weight:600;font-family:'DM Mono',monospace;color:${netPos?'var(--green)':'var(--red)'}">${netPos?'+$':'-$'}${Math.abs(net).toFixed(2)}</td>
         <td style="text-align:right;padding-right:16px;">
